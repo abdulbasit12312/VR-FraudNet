@@ -1,0 +1,84 @@
+# Baseline hyperparameters (manuscript Section 4.7).
+#
+# WARNING - READ BEFORE USING THESE NUMBERS
+# The manuscript names nine baselines but publishes hyperparameters for NONE of
+# them (only the Stage 1 LightGBM triage model is specified, in S4.2 / S4.8.1).
+# Every value below is therefore an ASSUMPTION made by this repository so that
+# the code runs. They are NOT the settings that produced manuscript Table 5, and
+# results obtained with them must not be described as reproducing that table.
+# See docs/KNOWN_LIMITATIONS.md L-18.
+
+baselines:
+
+  logistic_regression:
+    max_iter: 1000
+    class_weight: balanced
+
+  isolation_forest:
+    n_estimators: 200
+    contamination: auto
+
+  mlp:
+    hidden_dim: 128
+    n_layers: 2
+    dropout: 0.1
+    learning_rate: 0.001
+    batch_size: 1024
+    max_epochs: 50
+    patience: 10
+
+  cnn1d:
+    dropout: 0.1
+    learning_rate: 0.001
+    batch_size: 1024
+    max_epochs: 50
+    patience: 10
+
+  lstm:
+    hidden_dim: 128
+    n_layers: 2
+    dropout: 0.1
+    learning_rate: 0.001
+    batch_size: 1024
+    max_epochs: 50
+    patience: 10
+
+  random_forest:
+    n_estimators: 500
+    min_samples_leaf: 100
+    class_weight: balanced_subsample
+
+  xgboost:
+    n_estimators: 500
+    max_depth: 8
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+
+  lightgbm:
+    n_estimators: 500
+    max_depth: 8
+    num_leaves: 64
+    learning_rate: 0.05
+    min_child_samples: 100
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+
+  tabtransformer:
+    hidden_dim: 128
+    n_layers: 2
+    n_heads: 8
+    dropout: 0.1
+    learning_rate: 0.001
+    batch_size: 1024
+    max_epochs: 50
+    patience: 10
+
+_provenance_note: >-
+  All entries in this file are ASSUMPTION-tagged. The manuscript specifies no
+  baseline hyperparameters. Replace them with the authors' real settings before
+  claiming any comparison with manuscript Table 5.

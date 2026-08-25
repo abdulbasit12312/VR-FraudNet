@@ -1,0 +1,52 @@
+# Component ablations (manuscript Table 7a-7b, Section 5.3).
+#
+# Ablation ids and labels are taken verbatim from Table 7. The ordering in the
+# table is by effect size, not by id; the ids below preserve the paper's labels.
+
+ablations:
+  A1:
+    label: "w/o Verifier V"
+    disable: [stage3_verifier]
+    note: >-
+      Removing the verifier lets the unverified rationale-side probability reach
+      the Stage 4 mixer. It does NOT remove Stage 2.
+  A2:
+    label: "w/o Triage Ttheta"
+    disable: [stage1_triage]
+    note: >-
+      Every transaction is routed to Stage 2. The manuscript does not state what
+      replaces the triage probability as a mixer input in this variant
+      (ASSUMPTION L-24: the rationale-side probability alone is used).
+  A3:
+    label: "w/o Schema"
+    disable: [grammar_masked_decoding, schema_validation]
+    note: >-
+      Free-form generation. Claims can no longer be parsed reliably, so the
+      verifier's schema stage fails rather than its evidence stage.
+  A4:
+    label: "w/o Adversarial training"
+    disable: [adversarial_objective]
+  A5:
+    label: "w/o Cost-sensitive loss"
+    disable: [cost_sensitive_objective]
+  A6:
+    label: "w/o Large LLM"
+    disable: [stage2_rationale]
+    note: >-
+      The manuscript does not say whether A6 removes the rationale branch
+      entirely or substitutes a smaller generator; the label "w/o Large LLM"
+      suggests substitution but no replacement model is named
+      (REQUIRES AUTHOR CONFIRMATION, audit note A-18).
+  A7:
+    label: "w/o Learned mixer"
+    disable: [isotonic_mixer]
+    note: "Replaced by the triage probability passed through unchanged."
+  A8:
+    label: "lambda sensitivity +/-50%"
+    sensitivity:
+      factors: [0.5, 1.5]
+      weights: [cost_sensitive_weight, adversarial_weight, counterfactual_weight]
+      report: worse_of_two          # S4.6.4: "the lower-performing result ... is reported"
+  A9:
+    label: "w/o Counterfactual loss"
+    disable: [counterfactual_objective]

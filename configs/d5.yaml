@@ -1,0 +1,32 @@
+# D5 - DGraph-Fin (Finvolution). Manuscript Table 1 / Table 2.
+extends: base.yaml
+
+dataset:
+  id: D5
+  role: stress
+  raw_root: datasets/raw/D5
+  graph: true
+
+split:
+  train_fraction: 0.60
+  validation_fraction: 0.20
+
+preprocess:
+  numeric_scaling: standard
+  categorical_encoding: onehot_plus_minmax_timestamp
+
+stage0:
+  enabled: true
+
+stage1:
+  threshold_low: 0.17
+  threshold_high: 0.83
+
+_provenance:
+  split.train_fraction: {tag: ASSUMPTION, limitation: "L-05"}
+  split.validation_fraction: {tag: ASSUMPTION, limitation: "L-05"}
+  preprocess.numeric_scaling: {tag: MANUSCRIPT, source: "Table 2"}
+  preprocess.categorical_encoding: {tag: MANUSCRIPT, source: "Table 2"}
+  stage0.enabled: {tag: MANUSCRIPT, source: "Table 2 (users -> typed temporal edges)"}
+  stage1.threshold_low: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.threshold_high: {tag: MANUSCRIPT, source: "S4.8.1"}

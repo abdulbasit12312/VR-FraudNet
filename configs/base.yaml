@@ -1,0 +1,158 @@
+# Base configuration shared by every dataset.
+#
+# Provenance vocabulary (see src/vrfraudnet/config.py):
+#   MANUSCRIPT  - stated verbatim in the paper; 'source' names the section/table
+#   ASSUMPTION  - not stated; a default chosen to make the code run; 'limitation'
+#                 names an entry in docs/KNOWN_LIMITATIONS.md
+#   DERIVED     - computed from other manuscript values
+
+experiment:
+  name: vr-fraudnet
+  positive_class: 1          # fraud encoded as 1 (S4.8.3)
+  primary_metric: auprc      # S4.8.3
+
+seeds: [42, 123, 456, 789, 2024, 3141, 2718, 1001, 1729, 4096]   # S4.8.1
+
+stage0:
+  enabled: false             # overridden per dataset; bypassed for D1/D3 (S4.8.1)
+  n_filters: 4
+  beta_order: 4
+  time_embedding_dim: 32
+  output_dim: 64
+  mlp_hidden_dim: 64
+  dropout: 0.0
+  batch_size: 2048
+  fanouts: [25, 10]
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  max_epochs: 100
+  patience: 15
+  lr_reduce_factor: 0.5
+  lr_reduce_patience: 5
+  min_learning_rate: 0.00001
+  grad_clip_norm: 1.0
+
+stage1:
+  n_estimators: 500
+  max_depth: 8
+  num_leaves: 64
+  learning_rate: 0.05
+  min_child_samples: 100
+  feature_fraction: 0.80
+  bagging_fraction: 0.80
+  bagging_freq: 1
+  reg_alpha: 0.10
+  reg_lambda: 1.00
+  early_stopping_rounds: 50
+  num_threads: 4             # pinned for determinism, not a manuscript value
+  focal_gamma: 2.0
+  class_balanced_beta: 0.9999
+  max_escalation_rate: 0.05  # Figure 2: "uncertain cases, 5% or fewer transactions"
+
+stage2:
+  enabled: false             # requires a LoRA adapter; no weights are shipped
+  base_model: meta-llama/Meta-Llama-3.1-8B-Instruct
+  lora_rank: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj]
+  epochs: 3
+  learning_rate: 0.0002
+  weight_decay: 0.01
+  warmup_ratio: 0.05
+  max_input_tokens: 1024
+  max_output_tokens: 384
+  effective_batch_size: 32
+  precision: bfloat16
+  temperature: 0.0
+  do_sample: false
+  n_retrieved_examples: 4
+
+stage3:
+  rules_path: verifier/rules/claim_primitives.yaml
+  schema_path: schemas/rationale_schema.json
+
+stage4:
+  conformal_alpha: 0.05            # S4.8.1 primary significance level
+  conformal_alpha_secondary: 0.10  # S4.8.1 secondary sensitivity analysis
+  verifier_penalty: 0.10
+
+objectives:
+  cost_sensitive_weight: 0.50      # S4.6.1 / S4.6.4
+  adversarial_weight: 0.50         # S4.6.2 / S4.6.4
+  counterfactual_weight: 0.25      # S4.6.3 / S4.6.4
+  adversarial_train_budget: 2      # S4.6.2: B=2 during training
+  adversarial_fraud_fraction: 0.25 # S4.6.2: 25% of fraudulent examples per epoch
+  lambda_sensitivity_factors: [0.5, 1.5]   # S4.6.4
+
+adversarial_evaluation:
+  budgets: [1, 2, 4]               # S5.6
+  families: [split, delay, mule, inject, feat]
+  targets:                         # S5.6 predeclared mean evasion targets
+    "1": 0.07
+    "2": 0.10
+    "4": 0.20
+
+temporal:
+  drift_target_pp: 5.0             # S5.5
+
+_provenance:
+  seeds: {tag: MANUSCRIPT, source: "S4.8.1"}
+  experiment.positive_class: {tag: MANUSCRIPT, source: "S4.8.3"}
+  experiment.primary_metric: {tag: MANUSCRIPT, source: "S4.8.3"}
+
+  stage0.n_filters: {tag: MANUSCRIPT, source: "S4.1, Figure 3, Table 3 (K=4)"}
+  stage0.time_embedding_dim: {tag: MANUSCRIPT, source: "S4.1, Figure 3"}
+  stage0.output_dim: {tag: MANUSCRIPT, source: "S4.1, Table 3 (z_g in R^64)"}
+  stage0.batch_size: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage0.fanouts: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage0.learning_rate: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage0.weight_decay: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage0.max_epochs: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage0.patience: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage0.grad_clip_norm: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage0.beta_order: {tag: ASSUMPTION, limitation: "L-08"}
+  stage0.mlp_hidden_dim: {tag: ASSUMPTION, limitation: "L-09"}
+  stage0.dropout: {tag: ASSUMPTION, limitation: "L-09"}
+
+  stage1.n_estimators: {tag: MANUSCRIPT, source: "S4.2, S4.8.1"}
+  stage1.max_depth: {tag: MANUSCRIPT, source: "S4.2, S4.8.1"}
+  stage1.num_leaves: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.learning_rate: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.min_child_samples: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.feature_fraction: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.bagging_fraction: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.bagging_freq: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.reg_alpha: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.reg_lambda: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.early_stopping_rounds: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.max_escalation_rate: {tag: MANUSCRIPT, source: "Figure 2"}
+  stage1.focal_gamma: {tag: ASSUMPTION, limitation: "L-20"}
+  stage1.class_balanced_beta: {tag: ASSUMPTION, limitation: "L-12"}
+  stage1.num_threads: {tag: ASSUMPTION, limitation: "L-21"}
+
+  stage2.base_model: {tag: MANUSCRIPT, source: "S4.3.1"}
+  stage2.lora_rank: {tag: MANUSCRIPT, source: "S4.3.1"}
+  stage2.lora_alpha: {tag: MANUSCRIPT, source: "S4.3.1"}
+  stage2.lora_dropout: {tag: MANUSCRIPT, source: "S4.3.1"}
+  stage2.target_modules: {tag: MANUSCRIPT, source: "S4.3.1"}
+  stage2.epochs: {tag: MANUSCRIPT, source: "S4.3.1"}
+  stage2.learning_rate: {tag: MANUSCRIPT, source: "S4.8.1 (0.0002); see audit note A-11"}
+  stage2.max_input_tokens: {tag: MANUSCRIPT, source: "S4.3.1"}
+  stage2.max_output_tokens: {tag: MANUSCRIPT, source: "S4.3.1"}
+  stage2.effective_batch_size: {tag: MANUSCRIPT, source: "S4.3.1"}
+  stage2.n_retrieved_examples: {tag: MANUSCRIPT, source: "S4.3.4"}
+
+  stage4.conformal_alpha: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage4.conformal_alpha_secondary: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage4.verifier_penalty: {tag: ASSUMPTION, limitation: "L-16"}
+
+  objectives.cost_sensitive_weight: {tag: MANUSCRIPT, source: "S4.6.1"}
+  objectives.adversarial_weight: {tag: MANUSCRIPT, source: "S4.6.2"}
+  objectives.counterfactual_weight: {tag: MANUSCRIPT, source: "S4.6.3"}
+  objectives.adversarial_train_budget: {tag: MANUSCRIPT, source: "S4.6.2"}
+  objectives.adversarial_fraud_fraction: {tag: MANUSCRIPT, source: "S4.6.2"}
+
+  adversarial_evaluation.budgets: {tag: MANUSCRIPT, source: "S5.6"}
+  adversarial_evaluation.targets: {tag: MANUSCRIPT, source: "S5.6"}
+  temporal.drift_target_pp: {tag: MANUSCRIPT, source: "S5.5"}

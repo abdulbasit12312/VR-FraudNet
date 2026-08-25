@@ -1,0 +1,33 @@
+# Operational cost matrix for the cost-sensitive analysis (Supplementary S1).
+#
+# THIS FILE IS INTENTIONALLY INCOMPLETE.
+#
+# The manuscript's Section 4.6.1 refers to "the dataset-specific false-negative
+# fraud cost and false-positive review cost reported", but the main text never
+# reports them; they live in Supplementary Table S1, which was not available
+# when this repository was written (audit finding A-10).
+#
+# Fabricating plausible-looking costs would make every number in the operational
+# analysis meaningless, so the values below are null and the loader raises until
+# a human fills them in. Fill them from Supplementary Table S1, or from your own
+# institution's figures, and record which you used in the 'source' field.
+
+datasets:
+  D1:
+    false_negative_fraud_cost: null
+    false_positive_review_cost: null
+    true_positive_review_cost: null
+    currency: null
+    source: "REQUIRES AUTHOR CONFIRMATION - Supplementary Table S1"
+  D2:
+    false_negative_fraud_cost: null
+    false_positive_review_cost: null
+    true_positive_review_cost: null
+    currency: null
+    source: "REQUIRES AUTHOR CONFIRMATION - Supplementary Table S1"
+  D3:
+    false_negative_fraud_cost: null
+    false_positive_review_cost: null
+    true_positive_review_cost: null
+    currency: null
+    source: "REQUIRES AUTHOR CONFIRMATION - Supplementary Table S1"

@@ -1,0 +1,50 @@
+# D3 - IEEE-CIS Fraud Detection (Vesta). Manuscript Table 1 / Table 2.
+extends: base.yaml
+
+dataset:
+  id: D3
+  role: primary
+  raw_root: datasets/raw/D3
+  graph: false
+
+split:
+  test_quantile: 0.80
+  validation_fraction: 0.10
+  n_cv_folds: 5
+  cv_initial_fraction: 0.40
+
+preprocess:
+  numeric_scaling: standard
+  numeric_imputation: median
+  categorical_encoding: hash_plus_onehot
+  hash_buckets: 1024
+  pca_components: 50
+
+stage0:
+  enabled: false            # no explicit transaction graph (S4.8.1)
+
+stage1:
+  threshold_low: 0.22
+  threshold_high: 0.78
+
+evaluation:
+  # Manuscript Table 5(c) reports Recall@top-1% between 0.4234 and 0.6234 at a
+  # 3.50% fraud prevalence. The arithmetic ceiling is 0.01/0.035 = 0.2857, so
+  # those values are unattainable for every model in that table. The metric is
+  # still computed here (it is well defined) but the table builder refuses to
+  # present it as a reproduction of Table 5(c). See audit finding A-01.
+  recall_at_top_1pct_ceiling: 0.2857
+  reproduce_table_5c_recall_column: false
+
+_provenance:
+  split.test_quantile: {tag: MANUSCRIPT, source: "Table 1, S3.1"}
+  split.n_cv_folds: {tag: MANUSCRIPT, source: "Table 1 (5-fold expanding window)"}
+  split.validation_fraction: {tag: ASSUMPTION, limitation: "L-02"}
+  split.cv_initial_fraction: {tag: ASSUMPTION, limitation: "L-03"}
+  preprocess.pca_components: {tag: MANUSCRIPT, source: "Table 2 (339 V-cols -> 50)"}
+  preprocess.numeric_scaling: {tag: MANUSCRIPT, source: "Table 2"}
+  preprocess.hash_buckets: {tag: ASSUMPTION, limitation: "L-23"}
+  stage0.enabled: {tag: MANUSCRIPT, source: "S4.8.1 (Stage 0 bypassed for D3)"}
+  stage1.threshold_low: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.threshold_high: {tag: MANUSCRIPT, source: "S4.8.1"}
+  evaluation.reproduce_table_5c_recall_column: {tag: DERIVED, source: "audit finding A-01"}

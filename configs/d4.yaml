@@ -1,0 +1,38 @@
+# D4 - Elliptic++ transaction graph. Manuscript Table 1 / Table 2.
+extends: base.yaml
+
+dataset:
+  id: D4
+  role: stress
+  raw_root: datasets/raw/D4
+  graph: true
+
+split:
+  train_timesteps: [1, 34]
+  test_timesteps: [35, 49]
+
+preprocess:
+  numeric_scaling: standard_per_timestep
+  n_local_features: 94        # 183 declared - 89 pre-aggregated (Table 2)
+
+stage0:
+  enabled: true
+
+stage1:
+  threshold_low: 0.18
+  threshold_high: 0.82
+
+temporal:
+  # The manuscript refers to a pre/post "dark-market-shutdown" shock but never
+  # names the timestep. The Elliptic literature places it at timestep 43.
+  shock_timestep: 43
+
+_provenance:
+  split.train_timesteps: {tag: MANUSCRIPT, source: "Table 1, S3.1"}
+  split.test_timesteps: {tag: MANUSCRIPT, source: "Table 1, S3.1"}
+  preprocess.n_local_features: {tag: MANUSCRIPT, source: "Table 2 (94 features + graph G_t)"}
+  preprocess.numeric_scaling: {tag: MANUSCRIPT, source: "Table 2"}
+  stage0.enabled: {tag: MANUSCRIPT, source: "Table 2 (tx-nodes -> money-flow edges)"}
+  stage1.threshold_low: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.threshold_high: {tag: MANUSCRIPT, source: "S4.8.1"}
+  temporal.shock_timestep: {tag: ASSUMPTION, limitation: "L-19"}

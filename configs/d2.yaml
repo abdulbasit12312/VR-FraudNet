@@ -1,0 +1,36 @@
+# D2 - AMLworld HI-Small. Manuscript Table 1 / Table 2.
+extends: base.yaml
+
+dataset:
+  id: D2
+  role: primary
+  raw_root: datasets/raw/D2
+  graph: true
+
+split:
+  train_fraction: 0.60
+  validation_fraction: 0.20
+
+preprocess:
+  numeric_scaling: log1p_per_currency
+  categorical_encoding: onehot_plus_hash
+  hash_buckets: 1024
+  temporal_window_hours: 24
+
+stage0:
+  enabled: true
+
+stage1:
+  threshold_low: 0.15
+  threshold_high: 0.85
+
+_provenance:
+  split.train_fraction: {tag: MANUSCRIPT, source: "Table 1 (temporal 60/20/20)"}
+  split.validation_fraction: {tag: MANUSCRIPT, source: "Table 1"}
+  preprocess.numeric_scaling: {tag: MANUSCRIPT, source: "Table 2"}
+  preprocess.categorical_encoding: {tag: MANUSCRIPT, source: "Table 2"}
+  preprocess.temporal_window_hours: {tag: MANUSCRIPT, source: "Table 2 (24 h windows)"}
+  preprocess.hash_buckets: {tag: ASSUMPTION, limitation: "L-23"}
+  stage0.enabled: {tag: MANUSCRIPT, source: "Table 2 (graph construction for D2)"}
+  stage1.threshold_low: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.threshold_high: {tag: MANUSCRIPT, source: "S4.8.1"}

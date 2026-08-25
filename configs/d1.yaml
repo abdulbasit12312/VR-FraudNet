@@ -1,0 +1,40 @@
+# D1 - BAF Bank Account Fraud (Base variant). Manuscript Table 1 / Table 2.
+extends: base.yaml
+
+dataset:
+  id: D1
+  role: primary
+  raw_root: datasets/raw/D1
+  graph: false
+
+split:
+  train_months: [0, 1, 2, 3, 4, 5]
+  test_months: [6, 7]
+  validation_fraction: 0.10
+
+preprocess:
+  numeric_scaling: robust
+  numeric_imputation: median
+  categorical_encoding: smoothed_target
+  target_encoding_smoothing: 20.0
+  protected_attributes: [customer_age]
+
+stage0:
+  enabled: false            # no explicit transaction graph (S4.8.1)
+
+stage1:
+  threshold_low: 0.20
+  threshold_high: 0.80
+
+_provenance:
+  split.train_months: {tag: MANUSCRIPT, source: "Table 1, S3.1"}
+  split.test_months: {tag: MANUSCRIPT, source: "Table 1, S3.1"}
+  split.validation_fraction: {tag: MANUSCRIPT, source: "Table 1"}
+  preprocess.numeric_scaling: {tag: MANUSCRIPT, source: "Table 2"}
+  preprocess.numeric_imputation: {tag: MANUSCRIPT, source: "Table 2"}
+  preprocess.categorical_encoding: {tag: MANUSCRIPT, source: "Table 2"}
+  preprocess.target_encoding_smoothing: {tag: ASSUMPTION, limitation: "L-06"}
+  preprocess.protected_attributes: {tag: ASSUMPTION, limitation: "L-22"}
+  stage0.enabled: {tag: MANUSCRIPT, source: "S4.8.1 (Stage 0 bypassed for D1)"}
+  stage1.threshold_low: {tag: MANUSCRIPT, source: "S4.8.1"}
+  stage1.threshold_high: {tag: MANUSCRIPT, source: "S4.8.1"}
