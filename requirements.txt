@@ -1,0 +1,36 @@
+# ---------------------------------------------------------------------------
+# Core numerical / tabular stack (required for every pipeline in this repo)
+#
+# Versions are pinned to the software environment reported in manuscript
+# Section 4.8.2 where the manuscript states one.  Lower bounds are used where
+# the manuscript is silent, so the package installs on current interpreters.
+# ---------------------------------------------------------------------------
+numpy>=1.24,<2.3
+pandas>=2.0
+scipy>=1.11
+scikit-learn>=1.4.2          # manuscript S4.8.2: scikit-learn 1.4.2
+lightgbm>=4.3.0              # manuscript S4.8.2: LightGBM 4.3.0
+xgboost>=2.0.3               # manuscript S4.8.2: XGBoost 2.0.3
+pyyaml>=6.0
+tqdm>=4.66
+networkx>=3.1                # graph construction / path checks in the verifier
+jsonschema>=4.20             # Stage 2 rationale schema validation
+
+# ---------------------------------------------------------------------------
+# Deep-learning stack (Stage 0 spectral encoder, neural baselines)
+# Install a CUDA build of torch from https://pytorch.org if a GPU is present.
+# ---------------------------------------------------------------------------
+torch>=2.2.1                 # manuscript S4.8.2: PyTorch 2.2.1
+
+# ---------------------------------------------------------------------------
+# Optional extras -- see requirements-optional.txt
+#   torch-geometric, transformers, peft, sentence-transformers, faiss
+# The repository degrades gracefully when these are absent: Stage 2/3/4 code
+# paths raise an explicit, actionable error instead of silently substituting a
+# different model.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Development / test tooling
+# ---------------------------------------------------------------------------
+pytest>=7.4

@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: tests (python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pyflakes
+
+      - name: Lint (pyflakes)
+        run: python -m pyflakes src scripts tests examples || true
+
+      - name: Byte-compile everything
+        run: python -m compileall -q src scripts tests examples
+
+      - name: Validate configs and schemas
+        run: |
+          python - <<'PY'
+          import glob, json, yaml
+          for f in glob.glob("configs/*.yaml") + glob.glob("verifier/rules/*.yaml") \
+                   + glob.glob("evaluation/protocols/*.yaml") + glob.glob("statistics/tests/*.yaml") \
+                   + glob.glob("adversarial/families/*.yaml") + glob.glob("retrieval/config/*.yaml"):
+              yaml.safe_load(open(f, encoding="utf-8"))
+          for f in glob.glob("schemas/*.json") + glob.glob("examples/*.json"):
+              json.load(open(f, encoding="utf-8"))
+          print("all configs and schemas parse")
+          PY
+
+      - name: Run test suite
+        run: python -m pytest -q
+
+      - name: Manuscript consistency audit
+        run: python scripts/audit_manuscript.py
+
+      - name: Synthetic end-to-end demo
+        run: python examples/run_minimal_demo.py

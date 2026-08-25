@@ -1,0 +1,69 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# ---- Testing / tooling ----
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ---- Datasets (NEVER commit raw or derived data) ----
+datasets/raw/
+datasets/interim/
+datasets/processed/
+datasets/**/*.csv
+datasets/**/*.parquet
+datasets/**/*.npz
+datasets/**/*.zip
+datasets/**/*.tar.gz
+!datasets/checksums/*.sha256
+
+# ---- Model artefacts (NEVER commit checkpoints) ----
+checkpoints/
+*.ckpt
+*.safetensors
+*.bin
+*.onnx
+*.pkl
+*.joblib
+adapters/
+
+# ---- Retrieval indexes ----
+retrieval/index/
+*.faiss
+
+# ---- Run outputs ----
+results/**
+!results/.gitkeep
+!results/README.md
+runs/
+logs/
+wandb/
+mlruns/
+
+# ---- Secrets / local environment ----
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+secrets.yaml
+.hf_token
+.netrc
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

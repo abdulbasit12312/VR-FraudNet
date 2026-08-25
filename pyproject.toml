@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vrfraudnet"
+version = "0.1.0"
+description = "Reproducibility package for VR-FraudNet: verifier-grounded fraud detection"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "scipy>=1.11",
+  "scikit-learn>=1.4.2",
+  "lightgbm>=4.3.0",
+  "pyyaml>=6.0",
+  "networkx>=3.1",
+]
+
+[project.optional-dependencies]
+full = ["xgboost>=2.0.3", "torch>=2.2.1", "jsonschema>=4.20", "tqdm>=4.66"]
+dev = ["pytest>=7.4"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

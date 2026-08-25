@@ -1,0 +1,25 @@
+name: vr-fraudnet
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.7            # manuscript S4.8.2
+  - pip>=24.0
+  - numpy>=1.24
+  - pandas>=2.0
+  - scipy>=1.11
+  - scikit-learn>=1.4.2
+  - lightgbm>=4.3.0
+  - xgboost>=2.0.3
+  - pyyaml>=6.0
+  - tqdm>=4.66
+  - networkx>=3.1
+  - jsonschema>=4.20
+  - pytest>=7.4
+  - pip:
+      - torch>=2.2.1
+      # optional extras: see requirements-optional.txt
+      # - torch-geometric>=2.5.2
+      # - transformers>=4.40.1
+      # - peft>=0.10.0
+      # - sentence-transformers>=2.7.0
+      # - faiss-cpu>=1.8.0

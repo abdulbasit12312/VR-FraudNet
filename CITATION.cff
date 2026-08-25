@@ -1,0 +1,68 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite BOTH the software entry below and the
+  associated manuscript listed under `references`.
+title: "VR-FraudNet: reproducibility package for verifier-grounded fraud detection"
+abstract: >-
+  Reference implementation and reproducibility package for the five-stage
+  verifier-grounded fraud-detection framework VR-FraudNet: a time-conditioned
+  spectral graph encoder, a LightGBM triage and threshold router, a
+  schema-constrained rationale language model, a fixed deterministic verifier,
+  and an isotonic probability mixer with split-conformal calibration.
+type: software
+license: MIT
+repository-code: "https://github.com/abdulbasit12312/VR-FraudNet"
+version: "0.1.0"
+date-released: "2026-08-25"
+keywords:
+  - fraud detection
+  - deterministic verifier
+  - graph neural networks
+  - conformal prediction
+  - rationale verification
+  - reproducibility
+authors:
+  - family-names: Sourav
+    given-names: "Md Sultanul Arefin"
+    affiliation: "Department of Business Analytics, Trine University, Angola, Indiana, USA"
+  - family-names: Rozario
+    given-names: Evha
+    affiliation: "International American University, Los Angeles, California, USA"
+  - family-names: Islam
+    given-names: "Md Ashiqul"
+    affiliation: "College of Graduate and Professional Studies, Trine University, Angola, Indiana, USA"
+  - family-names: Chy
+    given-names: "Kaniz Sultana"
+    affiliation: "Riceland Healthcare, Beaumont, Texas, USA; Department of Information Systems, Lamar University, Beaumont, Texas, USA"
+  - family-names: Akter
+    given-names: Samia
+    affiliation: "Department of Business Analytics, Trine University, Angola, Indiana, USA"
+  - family-names: Shahiduzzaman
+    given-names: Md
+    affiliation: "Department of Business Analytics, Trine University, Tempe, Arizona, USA"
+  - family-names: Hossain
+    given-names: "Mohammad Sazzad"
+    affiliation: "Department of Business Analytics, Trine University, Angola, Indiana, USA"
+  - family-names: Kabtia
+    given-names: Maria
+    affiliation: "Department of Business Analytics, Trine University, Angola, Indiana, USA"
+  - family-names: Chakraborty
+    given-names: Partha
+    affiliation: "University of the Cumberlands, Williamsburg, Kentucky, USA"
+  - family-names: Basit
+    given-names: Abdul
+    affiliation: "Department of Computer Science and Engineering, Mekelle University, Mekelle, Ethiopia"
+    email: drabdulbasitmu@gmail.com
+references:
+  - type: article
+    title: "Grounding language models with deterministic verifiers for fraud detection"
+    status: submitted
+    year: 2026
+    notes: >-
+      Manuscript under review. DOI, journal and volume are unassigned at the time
+      of this release and MUST be filled in before the archival release tag.
+    authors:
+      - family-names: Sourav
+        given-names: "Md Sultanul Arefin"
+      - family-names: Basit
+        given-names: Abdul
