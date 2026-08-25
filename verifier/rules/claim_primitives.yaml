@@ -1,0 +1,152 @@
+# Declarative Stage 3 verifier rule set (manuscript Section 4.4).
+#
+# This file is the single source of truth for which operators each claim
+# primitive admits and what evidence each check requires. The Python engine in
+# src/vrfraudnet/verifier/ loads it; it never hard-codes an operator list.
+#
+# Manuscript S4.4: "It is a fixed deterministic module, not a trained neural
+# model, and checks only predefined structured claim types such as numeric
+# comparisons, set membership, temporal relations, graph paths, and entity
+# matches."
+
+version: 1
+source: "manuscript Section 4.3.2 (schema) and Section 4.4 (verifier)"
+
+primitives:
+
+  numeric_comparison:
+    description: >-
+      Assert an ordering or equality relation between a numeric transaction
+      field and a numeric constant.
+    operators: [lt, le, gt, ge, eq, ne]
+    value_types: [number]
+    requires_evidence: [numeric_field]
+    # Tolerance for floating-point equality. Not specified by the manuscript;
+    # ASSUMPTION L-13.
+    float_tolerance: 1.0e-9
+
+  set_membership:
+    description: >-
+      Assert that a categorical transaction field does or does not belong to an
+      enumerated set of admissible values.
+    operators: [in, not_in]
+    value_types: [array, string]
+    requires_evidence: [categorical_field]
+    max_set_size: 32
+
+  temporal_relation:
+    description: >-
+      Assert an ordering, a window, or a count over the transaction's temporal
+      context. Counts are evaluated against the past-only temporal aggregates
+      built during preprocessing; a temporal claim may never reference an event
+      after the transaction timestamp.
+    operators: [before, after, within_hours, count_ge, count_le]
+    value_types: [number, string]
+    requires_evidence: [timestamp, temporal_aggregate]
+    enforce_past_only: true
+
+  graph_path:
+    description: >-
+      Assert the existence or absence of a path between two entities in the
+      temporal graph snapshot observable at the transaction time.
+    operators: [path_exists, path_absent, hops_le]
+    value_types: [object, number]
+    requires_evidence: [graph_snapshot]
+    # Manuscript Table 4 example E1 cites a "valid two-hop intermediary path".
+    # The schema caps max_hops at 4; the verifier refuses longer searches so
+    # that verification cost stays bounded on the escalation path.
+    max_hops: 4
+    # When no graph is available for the dataset (D1, D3), a graph_path claim is
+    # UNVERIFIABLE, which the manuscript treats as rejection (Table 4, E2:
+    # "the graph claim is unverifiable because graph evidence is unavailable").
+    unavailable_graph_outcome: reject
+
+  entity_match:
+    description: >-
+      Assert that an entity identifier in the rationale matches (or does not
+      match) the corresponding identifier in the transaction record.
+    operators: [matches, not_matches]
+    value_types: [string]
+    requires_evidence: [entity_field]
+    case_sensitive: true
+
+# ---------------------------------------------------------------------------
+# Cross-claim consistency rules (manuscript S4.4: "cross-claim consistency";
+# S4.3.5: a rationale is rejected when "the proposed verdict is inconsistent
+# with the verified claims").
+# ---------------------------------------------------------------------------
+consistency_rules:
+
+  - id: CR1
+    name: no_contradictory_claims
+    description: >-
+      Two claims over the same field must not assert mutually unsatisfiable
+      conditions (for example amount > 1000 and amount < 100).
+    severity: reject
+
+  - id: CR2
+    name: evidence_reference_resolvable
+    description: >-
+      Every claim's evidence_id must appear in evidence_references AND resolve
+      in the current transaction's evidence dictionary.
+    severity: reject
+
+  - id: CR3
+    name: verdict_supported_by_claims
+    description: >-
+      A verdict of "fraud" requires at least one verified claim that is
+      risk-increasing; a verdict of "legitimate" requires that no verified claim
+      is risk-increasing. An "uncertain" verdict imposes no directional
+      requirement but still requires every claim to verify.
+    severity: reject
+
+  - id: CR4
+    name: no_duplicate_claims
+    description: >-
+      Two claims with identical (type, field, operator, value) add no evidential
+      content and indicate a degenerate generation.
+    severity: reject
+
+  - id: CR5
+    name: temporal_claims_are_past_only
+    description: >-
+      No temporal claim may reference an event whose timestamp is after the
+      transaction under evaluation.
+    severity: reject
+
+  - id: CR6
+    name: claim_count_within_schema
+    description: >-
+      At least one and at most eight claims (manuscript S4.3.2).
+    severity: reject
+
+# ---------------------------------------------------------------------------
+# Risk direction. Needed by CR3 to decide whether a verified claim supports a
+# fraud verdict. The manuscript does not define this mapping explicitly
+# (ASSUMPTION L-14); it is declared here so it is auditable and overridable
+# rather than buried in code.
+# ---------------------------------------------------------------------------
+risk_direction:
+  numeric_comparison:
+    gt: increasing        # e.g. amount greater than a threshold
+    ge: increasing
+    lt: decreasing
+    le: decreasing
+    eq: neutral
+    ne: neutral
+  set_membership:
+    in: increasing        # membership of a flagged / high-risk set
+    not_in: decreasing
+  temporal_relation:
+    count_ge: increasing  # burst of recent activity
+    count_le: decreasing
+    within_hours: increasing
+    before: neutral
+    after: neutral
+  graph_path:
+    path_exists: increasing   # link to a flagged entity
+    path_absent: decreasing
+    hops_le: increasing
+  entity_match:
+    matches: decreasing       # beneficiary matches the expected entity
+    not_matches: increasing

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/abdulbasit12312/VR-FraudNet/schemas/rationale_schema.json",
+  "title": "VR-FraudNet Stage 2 structured rationale",
+  "description": "Machine-checkable rationale object emitted by the schema-constrained rationale language model (manuscript Section 4.3.2). Every field in this schema is checkable by the Stage 3 deterministic verifier; unrestricted free-form fields are deliberately absent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "rationale_probability", "claims", "evidence_references"],
+  "properties": {
+    "verdict": {
+      "description": "Proposed verdict. Manuscript S4.3.2 restricts this to three values.",
+      "type": "string",
+      "enum": ["fraud", "legitimate", "uncertain"]
+    },
+    "rationale_probability": {
+      "description": "Rationale-side fraud probability. Treated as an UNVERIFIED language-model output: it is passed to the Stage 4 mixer only when the Stage 3 verifier accepts the complete rationale (manuscript S4.3.2, S4.5).",
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "claims": {
+      "description": "Structured claims. Manuscript S4.3.2 permits at most eight claims per transaction.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    "evidence_references": {
+      "description": "Identifiers of the evidence entries this rationale relies on. Every claim's evidence_id must appear here, and every id must exist in the transaction's evidence dictionary.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": { "type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,64}$" }
+    }
+  },
+  "$defs": {
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "field", "operator", "value", "evidence_id"],
+      "properties": {
+        "type": {
+          "description": "One of the five claim primitives of manuscript S4.3.2.",
+          "type": "string",
+          "enum": [
+            "numeric_comparison",
+            "set_membership",
+            "temporal_relation",
+            "graph_path",
+            "entity_match"
+          ]
+        },
+        "field": {
+          "description": "Referenced transaction field or entity identifier.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,64}$"
+        },
+        "operator": {
+          "description": "Comparison operator or relation. The admissible operator set depends on the claim type; the Stage 3 verifier enforces that dependency (see verifier/rules/claim_primitives.yaml).",
+          "type": "string",
+          "enum": [
+            "lt", "le", "gt", "ge", "eq", "ne",
+            "in", "not_in",
+            "before", "after", "within_hours", "count_ge", "count_le",
+            "path_exists", "path_absent", "hops_le",
+            "matches", "not_matches"
+          ]
+        },
+        "value": {
+          "description": "Asserted value. Numbers for numeric and temporal claims, strings for entity matches, arrays for set membership, objects for graph paths.",
+          "oneOf": [
+            { "type": "number" },
+            { "type": "string", "maxLength": 128 },
+            { "type": "boolean" },
+            {
+              "type": "array",
+              "maxItems": 32,
+              "items": { "type": ["string", "number"] }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["target"],
+              "properties": {
+                "target": { "type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,64}$" },
+                "max_hops": { "type": "integer", "minimum": 1, "maximum": 4 }
+              }
+            }
+          ]
+        },
+        "evidence_id": {
+          "description": "Identifier of the evidence entry supporting this claim. Must resolve inside the current transaction's evidence dictionary; a retrieved training example can never be cited (manuscript S4.3.4).",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,64}$"
+        }
+      }
+    }
+  }
+}
