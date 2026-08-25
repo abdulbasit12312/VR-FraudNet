@@ -1,0 +1,117 @@
+# Declarative specification of the five budgeted edit families
+# (manuscript Sections 4.6.2 and 5.6).
+#
+# The Python implementation in src/vrfraudnet/adversarial/ reads its
+# applicability preconditions from this file's structure; the file is the
+# human-auditable statement of what each edit is allowed to do.
+
+version: 1
+source: "manuscript S4.6.2 (adversarial training) and S5.6 (budgeted evaluation)"
+
+# Manuscript S4.6.2: fields that may never be modified by any edit.
+immutable:
+  - fraud_label
+  - protected_attributes
+  - immutable_identifiers
+  - dataset_split_assignment
+  - outcome_defining_fields
+
+budgets: [1, 2, 4]          # S5.6
+
+# S5.6 predeclared MEAN evasion targets, applied to the mean across the five
+# families. Explicitly NOT a per-family guarantee.
+mean_evasion_targets:
+  B1: 0.07
+  B2: 0.10
+  B4: 0.20
+
+families:
+
+  split:
+    label: "eps1 split"
+    description: "Divide one payment into two records."
+    invariant: "the two parts sum to the original total amount"
+    requires:
+      row_is_a_payment: true
+      transaction_amount_field: true
+    status_by_dataset:
+      D1: not_applicable   # audit A-07: BAF rows are account applications
+      D2: applicable
+      D3: applicable
+      D4: not_applicable   # no transaction amount in the feature set
+      D5: not_applicable   # nodes are users, not payments
+
+  delay:
+    label: "eps2 delay"
+    description: "Postpone execution."
+    invariant: "chronological validity is preserved; time never moves backwards"
+    requires:
+      fine_grained_timestamp: true
+    max_delay_seconds: 86400        # ASSUMPTION L-17
+    status_by_dataset:
+      D1: not_applicable   # month granularity only
+      D2: applicable
+      D3: applicable
+      D4: applicable
+      D5: applicable
+
+  mule:
+    label: "eps3 mule"
+    description: "Reroute through an intermediary entity."
+    invariant: "the substituted entity and edge type are drawn from the TRAINING graph"
+    requires:
+      entity_graph: true
+      admissible_entity_pool_from_training: true
+    status_by_dataset:
+      D1: not_applicable
+      D2: applicable
+      D3: not_applicable
+      D4: applicable
+      D5: applicable
+
+  inject:
+    label: "eps4 inject"
+    description: "Place a prompt-injection payload in an untrusted text field."
+    invariant: "the payload is confined to a genuinely untrusted free-text field"
+    requires:
+      untrusted_free_text_field: true
+      target_model_consumes_text: true
+    status_by_dataset:
+      D1: not_applicable
+      D2: not_applicable
+      D3: not_applicable
+      D4: not_applicable
+      D5: not_applicable
+    audit_note: >-
+      AUDIT FINDING A-06. No benchmark in this study carries an untrusted
+      free-text field, and none of the nine tabular baselines consumes text at
+      any point. Manuscript Table 10 nevertheless reports injection evasion
+      rates for LightGBM (0.5234 at B=1, 0.8123 at B=4) and TabTransformer.
+      This family will not run until an operator declares a real text field AND
+      the target model is text-consuming.
+
+  feat:
+    label: "eps5 feat"
+    description: "Perturb one numeric feature."
+    invariant: "the perturbed value stays inside the TRAINING-derived bounds for that feature"
+    requires:
+      bounded_numeric_feature: true
+    perturbation_fraction_of_range: 0.10   # ASSUMPTION
+    status_by_dataset:
+      D1: applicable
+      D2: applicable
+      D3: applicable
+      D4: applicable
+      D5: applicable
+
+# Manuscript S4.6.2 adversarial-training settings, distinct from evaluation.
+adversarial_training:
+  budget: 2
+  fraudulent_fraction_per_epoch: 0.25
+  candidates_per_transaction: 5
+  selection: "retain the valid candidate with the largest predictive loss"
+  keep_original: true
+  weight: 0.50
+  note: >-
+    Test-time attacks are generated independently at B=1, 2 and 4, and no
+    training-time adversarial example is reused in the robustness evaluation.
