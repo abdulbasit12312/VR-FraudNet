@@ -1,0 +1,12 @@
+{
+  "verdict": "fraud",
+  "rationale_probability": 0.81,
+  "claims": [
+    {"type": "numeric_comparison", "field": "amount", "operator": "gt", "value": 5000, "evidence_id": "amount"},
+    {"type": "set_membership", "field": "payment_type", "operator": "in", "value": ["wire", "crypto"], "evidence_id": "payment_type"},
+    {"type": "temporal_relation", "field": "recent_transfer_count", "operator": "count_ge", "value": 5, "evidence_id": "recent_transfer_count"},
+    {"type": "graph_path", "field": "counterparty", "operator": "path_exists", "value": {"target": "ACC-FLAGGED-2201", "max_hops": 2}, "evidence_id": "counterparty"},
+    {"type": "entity_match", "field": "beneficiary", "operator": "not_matches", "value": "ACC-EXPECTED-0001", "evidence_id": "beneficiary"}
+  ],
+  "evidence_references": ["amount", "payment_type", "recent_transfer_count", "counterparty", "beneficiary"]
+}

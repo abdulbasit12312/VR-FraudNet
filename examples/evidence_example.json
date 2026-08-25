@@ -1,0 +1,28 @@
+{
+  "transaction_id": "TX-000123",
+  "timestamp": 1767225600.0,
+  "numeric": {
+    "amount": 9500.0,
+    "account_age_days": 4.0
+  },
+  "categorical": {
+    "payment_type": "wire",
+    "product_category": "electronics"
+  },
+  "entities": {
+    "beneficiary": "ACC-88231",
+    "counterparty": "ACC-77004"
+  },
+  "temporal_aggregates": {
+    "recent_transfer_count": 7.0
+  },
+  "graph": {
+    "as_of_time": 1767225600.0,
+    "adjacency": {
+      "ACC-77004": ["ACC-51902"],
+      "ACC-51902": ["ACC-FLAGGED-2201"],
+      "ACC-88231": ["ACC-77004"]
+    },
+    "flagged_entities": ["ACC-FLAGGED-2201"]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "verdict": "legitimate",
+  "rationale_probability": 0.18,
+  "claims": [
+    {"type": "numeric_comparison", "field": "amount", "operator": "gt", "value": 5000, "evidence_id": "amount"},
+    {"type": "set_membership", "field": "product_category", "operator": "in", "value": ["retail"], "evidence_id": "product_category"},
+    {"type": "temporal_relation", "field": "recent_transfer_count", "operator": "count_ge", "value": 40, "evidence_id": "recent_transfer_count"},
+    {"type": "graph_path", "field": "counterparty", "operator": "path_absent", "value": {"target": "ACC-FLAGGED-2201", "max_hops": 2}, "evidence_id": "counterparty"}
+  ],
+  "evidence_references": ["amount", "product_category", "recent_transfer_count", "counterparty"]
+}
