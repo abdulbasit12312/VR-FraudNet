@@ -1,0 +1,54 @@
+# Training-only retrieval index configuration (manuscript Section 4.3.4).
+
+version: 1
+source: "manuscript S4.3.4"
+
+encoder:
+  model: all-MiniLM-L6-v2        # MANUSCRIPT S4.3.4
+  similarity: cosine             # MANUSCRIPT S4.3.4
+  backend: faiss                 # MANUSCRIPT S4.3.4 / S4.8.2 (FAISS-GPU 1.8.0)
+  note: >-
+    No substitute encoder is used when sentence-transformers is unavailable; a
+    different embedding would change which demonstrations the language model
+    sees, so the code raises instead.
+
+retrieval:
+  n_retrieved: 4                 # MANUSCRIPT S4.3.4
+  allow_fewer: true              # "When fewer than four eligible examples are available"
+  omit_when_empty: true          # "Retrieval is omitted when no eligible training example exists"
+  order: descending_similarity
+
+# Eligibility rules. Each is enforced structurally in
+# src/vrfraudnet/retrieval/index.py, not left to caller discipline.
+eligibility:
+  partition:
+    allowed: [train]
+    excluded: [validation, test, transfer, temporal_shock, adversarial]
+    enforcement: "RetrievalRecord raises LeakageError at construction"
+  verifier:
+    require_schema_valid: true
+    require_verifier_accepted: true
+  temporal:
+    require_strictly_earlier: true
+    note: "applies to datasets with explicit timestamps"
+  identifier:
+    exclude_same_transaction_id: true
+    exclude_shared_direct_entity_id: true
+    rationale: "prevents identifier-based retrieval leakage"
+
+# What each indexed record holds (manuscript S4.3.4).
+record_fields:
+  - standardised_transaction_summary
+  - temporal_and_graph_context
+  - stage1_probability_band
+  - structured_rationale
+  - machine_checkable_claims
+  - evidence_references
+
+# Manuscript S4.3.4, stated as a constraint on generation rather than retrieval.
+citation_rule: >-
+  A retrieved example provides a demonstration of form only. It is never
+  evidence, can never be cited as an evidence_id, and cannot modify the output
+  schema, the verifier rules or the routing policy. The Stage 3 verifier
+  enforces this: an evidence_id must resolve inside the CURRENT transaction's
+  evidence dictionary (consistency rule CR2).
