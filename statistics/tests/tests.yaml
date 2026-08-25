@@ -1,0 +1,59 @@
+# Statistical testing protocol (manuscript Section 5.2).
+
+version: 1
+source: "manuscript S5.2, Tables 6(a)-6(d)"
+
+multiple_comparison_correction: holm-bonferroni
+n_comparisons: 9        # the nine baselines of S4.7
+
+tests:
+
+  auprc_comparison:
+    test: paired Wilcoxon signed-rank
+    alternative: greater
+    predeclared: true
+    pairing_unit: (dataset, seed)
+    n_pairs_pooled: 30           # 10 seeds x 3 datasets
+    v_max: 465                   # n(n+1)/2
+    effect_size:
+      reported_as: delta
+      estimator_used_here: cliffs_delta
+      audit_note: >-
+        AUDIT NOTE A-12. The manuscript reports an "Effect size delta" without
+        naming the estimator. The Cliff delta statistic is the effect size
+        conventionally paired with a Wilcoxon signed-rank test, and is what this
+        repository computes.
+    audit_note: >-
+      AUDIT FINDING A-04. Pooling paired differences across D1-D3 treats
+      (dataset, seed) cells as exchangeable. The ten seeds WITHIN a dataset are
+      exchangeable; observations ACROSS datasets are not, since the paired
+      difference distributions differ by dataset (about +2.4, +6.9 and +2.2 pp)
+      and the AUPRC scales differ by roughly 1.5x. Both the pooled test and the
+      per-dataset tests are reported.
+    second_audit_note: >-
+      AUDIT FINDING A-02. The mean deltas printed in Table 6(a) do not equal the
+      means implied by Table 5 for any of the nine baselines; every gap has the
+      same sign and shrinks as the baseline strengthens.
+
+  roc_auc_comparison:
+    test: DeLong z-test on correlated ROC curves
+    sided: two
+    scope: within dataset
+    requires: per-transaction prediction vectors over one labelled sample
+    seed_policy: REQUIRES_EXPLICIT_DECLARATION
+    audit_note: >-
+      AUDIT FINDING A-03. The manuscript reports ten seeded runs per model but
+      does not say which prediction vectors produced its DeLong statistics.
+      Three readings (single seed / seed-mean scores / pooled per-seed tests)
+      give different answers, so the policy must be declared and is recorded in
+      every result file. Tables 6(b)-6(d) cannot be regenerated from the
+      published summary statistics (L-01).
+
+  confidence_intervals:
+    test: percentile bootstrap on the paired mean difference
+    n_resamples: 10000
+    confidence: 0.95
+    provenance: >-
+      NOT a manuscript quantity. Added because a Q1 reviewer will ask for an
+      interval alongside a p-value, and because the DeLong p-values on samples
+      of 10^5-10^6 transactions are uninformative about practical significance.

@@ -1,0 +1,38 @@
+# Latency measurement protocol (manuscript Section 4.8.2).
+
+version: 1
+source: "manuscript S4.8.2"
+
+measurement:
+  batch_size: 1
+  warmup_inferences: 1000
+  timed_transactions: 10000
+  gpu_synchronisation: "immediately before and after every timed inference"
+  percentiles_from: individual transaction times
+  excluded: [data_loading, offline_preprocessing]
+
+pathways:
+  common:
+    includes: [stage0_when_applicable, stage1_triage, routing, stage4_probability_processing]
+    excludes: [language_model_invocation]
+    manuscript_reported_p99_ms: 10.23
+  escalation:
+    includes: [common_path, retrieval, stage2_generation, stage3_verification]
+    manuscript_reported_p99_ms: 175.23
+    audit_note: >-
+      AUDIT FINDING A-17. Single-stream autoregressive decoding is
+      memory-bandwidth bound: an 8B bfloat16 model (about 16 GB of weights)
+      against an A100-80GB (about 2.0 TB/s HBM) has a floor near 8 ms per token.
+      The reported p99 implies 0.46 ms per token at the stated 384-token cap,
+      and 2.92 ms per token even for a short 60-token rationale. Reproducing it
+      requires a smaller generator, speculative decoding, or an optimised
+      serving stack, none of which S4.8.2 describes.
+
+budget_ms: 200        # Figure 1
+
+reference_hardware:
+  cpu: "AMD EPYC 7543 32-core"
+  memory_gb: 256
+  gpu: "1x NVIDIA A100 80GB"
+  os: "Ubuntu 22.04 LTS"
+  note: "latency figures are meaningless without the machine that produced them"

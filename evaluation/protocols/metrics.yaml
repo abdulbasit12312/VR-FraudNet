@@ -1,0 +1,51 @@
+# Metric definitions and the threshold protocol (manuscript Section 4.8.3).
+
+version: 1
+source: "manuscript S4.8.3"
+
+positive_class:
+  label: fraud
+  encoding: 1
+
+primary_metric:
+  name: auprc
+  rationale: "prevalence ranges from 0.10% to 3.50% across D1-D5"
+  computation: "across all unique score thresholds, from continuous scores"
+
+secondary_metrics:
+  - name: roc_auc
+    computation: "same continuous scores"
+  - name: f1
+    definition: "fraud-class F1 only; NOT macro, weighted or micro"
+  - name: precision
+  - name: recall
+  - name: mcc
+  - name: recall_at_top_1pct
+    definition: >-
+      Rank each test fold independently in descending calibrated probability,
+      take the top ceil(1%) of that fold, divide recovered fraud by total fraud
+      in the SAME fold. Never constructed by pooling across train, validation
+      and test.
+    hard_bound: "0.01 / prevalence"
+    audit_note: >-
+      AUDIT FINDING A-01. At the D3 declared prevalence of 3.50% the ceiling is
+      0.2857. Manuscript Table 5(c) reports 0.4234 to 0.6234 for every model,
+      which is unattainable. The metric layer refuses to present that column as
+      a reproduction.
+
+operating_threshold:
+  selected_on: validation
+  criterion: maximise fraud-class F1 after probability calibration
+  frozen: true
+  applied_unchanged_to: [test, temporal, transfer, robustness]
+
+aggregation:
+  order: [per_fold, per_dataset_seed, across_seeds]
+  fold_aggregation: arithmetic mean
+  seed_aggregation:
+    centre: mean
+    dispersion: sample standard deviation (ddof=1)
+    interpretation: >-
+      Variation across repeated training runs, NOT uncertainty from resampling
+      individual transactions.
+  n_seeds: 10

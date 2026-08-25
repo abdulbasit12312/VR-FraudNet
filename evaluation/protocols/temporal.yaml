@@ -1,0 +1,44 @@
+# Temporal drift and shock protocols (manuscript Section 5.5, Table 9).
+
+version: 1
+source: "manuscript S5.5"
+
+drift_target_pp: 5.0
+interpretation: >-
+  The 5 pp target means something different in each protocol: D1 measures
+  month-based degradation from a reference period, D3 measures late-fold
+  degradation from Fold 3 to Fold 5, and D4 separates ordinary pre-shock
+  degradation from the additional shock-impact component.
+
+protocols:
+
+  d1_month_drift:
+    dataset: D1
+    windows: [month_6, month_7]
+    reference_partition: REQUIRES_EXPLICIT_DECLARATION
+    audit_note: >-
+      AUDIT FINDING A-16. Table 9(a) heads its reference column "Train AUPRC"
+      and gives 0.5247, which is exactly the value Table 5(a) reports as the
+      held-out TEST AUPRC. The mean of the Table 9(a) month values is 0.5017,
+      a 2.30 pp gap. The reference partition must therefore be declared
+      explicitly; the code will not emit a drift figure with an ambiguous
+      baseline.
+
+  d3_expanding_window:
+    dataset: D3
+    n_folds: 5
+    initial_window_fraction: 0.40      # ASSUMPTION L-03
+    late_degradation: fold_5 minus fold_3
+
+  d4_pre_post_shock:
+    dataset: D4
+    shock: dark-market shutdown
+    shock_timestep: 43                 # ASSUMPTION L-19
+    reported_components:
+      - delta_pre    # reference -> pre-shock window
+      - delta_post   # reference -> post-shock window
+      - shock_impact # pre-shock -> post-shock
+    manuscript_outcome: >-
+      The paper reports, candidly, that D4 post-shock AUPRC falls by 7.36 pp
+      absolute, exceeding the 5 pp target. The ShockResult.exceeds_target
+      property reproduces that judgement mechanically.

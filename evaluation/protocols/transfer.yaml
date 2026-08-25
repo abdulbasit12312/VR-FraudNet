@@ -1,0 +1,49 @@
+# Cross-dataset transfer protocol (manuscript Section 5.4, Table 8).
+
+version: 1
+source: "manuscript S5.4"
+
+metric: auprc
+matrices:
+  - name: zero_shot_vr_fraudnet
+    target_labels_used: 0
+  - name: few_shot_vr_fraudnet
+    target_labels_used: 0.01           # 1% of target labels
+    sampling: stratified
+    sampling_note: >-
+      Stratified because an unstratified 1% sample of D2 (0.10% prevalence)
+      would frequently contain no positives, making the cell meaningless.
+  - name: zero_shot_tabtransformer
+    target_labels_used: 0
+
+alignment:
+  status: NOT_SPECIFIED_BY_MANUSCRIPT
+  audit_note: >-
+    AUDIT FINDING A-14. D1-D5 share no feature space, no label semantics and no
+    graph semantics. A model trained on the 30 account-application attributes of
+    D1 is not a function that can be applied to the roughly 109 anonymised
+    payment columns of D3 until an alignment is defined, and the manuscript
+    defines none. Table 8 therefore cannot be reproduced or interpreted as
+    published.
+  required_flag: "--alignment"
+  available_strategies:
+    column_name:
+      description: "match columns by name; drop and zero-fill the remainder"
+      applicable_to_d1_d5: false
+    rank_projection:
+      description: >-
+        project both datasets onto a fixed-width space of rank-normalised
+        features ordered by training-set mutual information with the label
+      applicable_to_d1_d5: true
+      provenance: "invented by this repository, not by the manuscript"
+    head_refit:
+      description: "refit a fresh head on target labels"
+      applicable_to_d1_d5: true
+      note: "the only strategy under which the few-shot matrix is well defined"
+
+label_semantics_warning:
+  dataset: D5
+  audit_note: >-
+    AUDIT FINDING A-15. The DGraph-Fin node label denotes LOAN DEFAULT, not
+    fraud in the sense of D1-D4. Transfer to or from D5 changes the task, not
+    just the domain.
