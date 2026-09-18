@@ -18,8 +18,20 @@ immutable:
 
 budgets: [1, 2, 4]          # S5.6
 
-# S5.6 predeclared MEAN evasion targets, applied to the mean across the five
-# families. Explicitly NOT a per-family guarantee.
+# Revised manuscript (S4.6.2, S5.6, Tables 9(a-c)): the PREDICTIVE-PATH evasion
+# analysis uses the four STRUCTURED families only. Prompt injection is evaluated
+# separately through the Stage 2 rationale-generation and Stage 3 verifier
+# pathway and is not applied to LightGBM, TabTransformer or the other
+# structured baselines. The "Mean" column of Tables 9(a-c) is the arithmetic
+# mean over these four families.
+predictive_path_families: [split, delay, mule, feat]
+rationale_pathway_families: [inject]
+
+# Predeclared MEAN evasion targets as stated in the ORIGINAL submission, applied
+# to the mean across families. The revised manuscript main text refers to
+# "predeclared reliability targets" for budgeted evasion without restating the
+# numbers; they are kept here as the only written record and are NOT read by any
+# runtime path. Explicitly NOT a per-family guarantee.
 mean_evasion_targets:
   B1: 0.07
   B2: 0.10
@@ -108,7 +120,7 @@ families:
 adversarial_training:
   budget: 2
   fraudulent_fraction_per_epoch: 0.25
-  candidates_per_transaction: 5
+  candidates_per_transaction: 4     # revised S4.6.2: "up to four valid candidates ... one candidate corresponding to each applicable structured edit family" (the original submission said five, one per family incl. injection)
   selection: "retain the valid candidate with the largest predictive loss"
   keep_original: true
   weight: 0.50

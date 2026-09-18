@@ -87,7 +87,8 @@ objectives:
 
 adversarial_evaluation:
   budgets: [1, 2, 4]               # S5.6
-  families: [split, delay, mule, inject, feat]
+  families: [split, delay, mule, inject, feat]      # registry of all five (S4.6.2 original)
+  predictive_path_families: [split, delay, mule, feat]   # revised S4.6.2 / S5.6: structured families only
   targets:                         # S5.6 predeclared mean evasion targets
     "1": 0.07
     "2": 0.10
@@ -154,5 +155,6 @@ _provenance:
   objectives.adversarial_fraud_fraction: {tag: MANUSCRIPT, source: "S4.6.2"}
 
   adversarial_evaluation.budgets: {tag: MANUSCRIPT, source: "S5.6"}
-  adversarial_evaluation.targets: {tag: MANUSCRIPT, source: "S5.6"}
+  adversarial_evaluation.targets: {tag: MANUSCRIPT, source: "S5.6 (original submission; not restated in the revised main text)"}
+  adversarial_evaluation.predictive_path_families: {tag: MANUSCRIPT, source: "revised S4.6.2, S5.6, Tables 9(a-c)"}
   temporal.drift_target_pp: {tag: MANUSCRIPT, source: "S5.5"}
