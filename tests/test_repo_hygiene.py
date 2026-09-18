@@ -13,7 +13,8 @@ from pathlib import Path
 
 TEXT_SUFFIXES = {".py", ".md", ".yaml", ".yml", ".json", ".toml", ".cff", ".txt", ".sh", ".cfg"}
 SKIP_DIRS = {".git", ".pytest_cache", "__pycache__", ".venv", "venv", "node_modules",
-             ".mypy_cache", ".ruff_cache", "results", "datasets"}
+             ".mypy_cache", ".ruff_cache", "results", "datasets", "dist", "checkpoints",
+             "retrieval/index"}
 
 #: Files permitted to quote manuscript numbers, and why.
 AUDIT_INPUT_FILES = {
