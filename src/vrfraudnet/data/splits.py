@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from typing import Sequence
+
 import numpy as np
 
 from vrfraudnet.errors import LeakageError
@@ -224,20 +226,67 @@ def quantile_time_split(
     )
 
 
+#: Manuscript Table 8(d) (revised manuscript): fixed-origin, moving-cut,
+#: test-to-end expanding-window folds on D3, cut at these TransactionDT quantiles.
+MANUSCRIPT_D3_CUT_QUANTILES: tuple[float, ...] = (0.60, 0.70, 0.80, 0.85, 0.90)
+
+
 def expanding_window_folds(
     time_values: np.ndarray,
     *,
     n_folds: int = 5,
     initial_fraction: float = 0.40,
+    cut_quantiles: Sequence[float] | None = None,
 ) -> list[Split]:
-    """D3 expanding-window time-series CV (manuscript Table 1, S3.1, Table 9(b)).
+    """D3 expanding-window time-series CV (manuscript Table 1, S3.1, Table 8(b), Table 8(d)).
 
-    Fold ``k`` trains on everything before a growing cut point and tests on the
-    next contiguous block. Only the number of folds (5) is stated by the
-    manuscript; the initial window size is an ASSUMPTION recorded as L-03.
+    Two constructions are supported and the choice is recorded in each fold's
+    description:
+
+    * ``cut_quantiles`` given (the revised manuscript's Table 8(d)):
+      **fixed-origin, moving-cut, test-to-end**. Fold ``k`` trains on every
+      observation with ``time < q_k`` and tests on every observation with
+      ``time >= q_k``. Fold 3 at ``q = 0.80`` is therefore the same partition as
+      the primary Table 5(c) holdout by construction. Test partitions are nested
+      and of different sizes. ``n_folds`` must equal ``len(cut_quantiles)``.
+    * ``cut_quantiles`` omitted (the original construction, retained for
+      comparison): fold ``k`` trains on everything before a growing cut point
+      and tests on the next contiguous block, with the initial window an
+      ASSUMPTION (L-03, superseded by Table 8(d)).
     """
     order = np.argsort(time_values, kind="stable")
     n = order.size
+    folds: list[Split] = []
+
+    if cut_quantiles is not None:
+        cuts = tuple(float(q) for q in cut_quantiles)
+        if len(cuts) != n_folds:
+            raise ValueError(f"n_folds={n_folds} but {len(cuts)} cut quantiles were given")
+        if any(not 0.0 < q < 1.0 for q in cuts) or list(cuts) != sorted(cuts):
+            raise ValueError("cut quantiles must be strictly increasing and inside (0, 1)")
+        for k, q in enumerate(cuts):
+            train_end = int(round(q * n))
+            if train_end < 2 or train_end >= n:
+                raise ValueError(f"cut quantile {q} produces an empty training or test window")
+            train_idx = order[:train_end]
+            test_idx = order[train_end:]
+            n_val = max(1, int(round(0.10 * train_idx.size)))
+            fold_train, fold_val = train_idx[:-n_val], train_idx[-n_val:]
+            assert_temporal_order(time_values, fold_train, fold_val, label=f"D3 fold{k+1} train->val")
+            assert_temporal_order(time_values, fold_val, test_idx, label=f"D3 fold{k+1} val->test")
+            folds.append(
+                Split(
+                    train=fold_train,
+                    validation=fold_val,
+                    test=test_idx,
+                    description=(
+                        f"expanding window fold {k + 1}/{n_folds}: fixed-origin, cut at "
+                        f"quantile {q:.2f}, test-to-end (manuscript Table 8(d))"
+                    ),
+                )
+            )
+        return folds
+
     start = int(round(initial_fraction * n))
     if start < 1 or start >= n:
         raise ValueError("initial_fraction produces an empty or full training window")
@@ -245,7 +294,6 @@ def expanding_window_folds(
     if block < 1:
         raise ValueError("not enough samples for the requested number of folds")
 
-    folds: list[Split] = []
     for k in range(n_folds):
         train_end = start + k * block
         test_end = train_end + block if k < n_folds - 1 else n

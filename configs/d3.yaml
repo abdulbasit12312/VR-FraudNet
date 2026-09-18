@@ -11,7 +11,8 @@ split:
   test_quantile: 0.80
   validation_fraction: 0.10
   n_cv_folds: 5
-  cv_initial_fraction: 0.40
+  cv_cut_quantiles: [0.60, 0.70, 0.80, 0.85, 0.90]   # Table 8(d): fixed-origin, moving-cut, test-to-end
+  cv_initial_fraction: 0.40                          # legacy contiguous-block construction only
 
 preprocess:
   numeric_scaling: standard
@@ -40,6 +41,7 @@ _provenance:
   split.test_quantile: {tag: MANUSCRIPT, source: "Table 1, S3.1"}
   split.n_cv_folds: {tag: MANUSCRIPT, source: "Table 1 (5-fold expanding window)"}
   split.validation_fraction: {tag: ASSUMPTION, limitation: "L-02"}
+  split.cv_cut_quantiles: {tag: MANUSCRIPT, source: "Table 8(d) (revised manuscript); Fold 3 = primary Table 5(c) holdout"}
   split.cv_initial_fraction: {tag: ASSUMPTION, limitation: "L-03"}
   preprocess.pca_components: {tag: MANUSCRIPT, source: "Table 2 (339 V-cols -> 50)"}
   preprocess.numeric_scaling: {tag: MANUSCRIPT, source: "Table 2"}
