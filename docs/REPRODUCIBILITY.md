@@ -95,18 +95,35 @@ python scripts/prepare_data.py --dataset D1 --config configs/d1.yaml --check-onl
 
 ## 4. Running the pipeline
 
-### Sanity check (no data required)
+Four levels. Each level's commands point at real files; the reviewer map in
+`docs/REVIEWER_REPRODUCIBILITY.md` lists every artefact they touch.
+
+### Level A — integrity check (no data required)
 
 ```bash
 python -m pytest -q
 python examples/run_minimal_demo.py
-python scripts/audit_manuscript.py
+python scripts/audit_manuscript.py --revision revised
 ```
+
+### Level B — reviewer artefacts and the versioned archive
+
+```bash
+python scripts/audit_reviewer_artifacts.py                  # every documented path exists
+python scripts/validate_rationale_schema.py                 # schema, rules, examples, grammar
+python scripts/build_reproducibility_bundle.py --check-manifest
+python scripts/build_reproducibility_bundle.py --version 1.0.0
+python scripts/verify_reproducibility_bundle.py dist/VR-FraudNet-reproducibility-1.0.0.tar.gz
+python scripts/train_stage2_lora.py --dataset D2 --config configs/d2.yaml \
+    --corpus examples/stage2_corpus_example.jsonl --seed 42 --dry-run
+```
+
+See `docs/RELEASE.md` for what the archive contains and how it is verified.
 
 The demo runs on `numpy.random` output. **Nothing it prints is a scientific
 result.**
 
-### One dataset, one seed
+### Level C — one dataset, one seed
 
 ```bash
 python scripts/train.py     --dataset D1 --config configs/d1.yaml --seed 42
@@ -114,12 +131,27 @@ python scripts/evaluate.py  --dataset D1 --config configs/d1.yaml --seed 42
 python scripts/calibrate.py --dataset D1 --config configs/d1.yaml --seed 42
 ```
 
-### Full sweep
+### Level D — full sweep
 
 ```bash
 bash reproduce_all.sh              # prints the plan
 bash reproduce_all.sh --execute    # actually runs it
 ```
+
+### Stage 2 (requires artefacts that are not shipped)
+
+```bash
+python scripts/build_retrieval_index.py --dataset D1 --config configs/d1.yaml --corpus <corpus.jsonl> --seed 42
+python scripts/train_stage2_lora.py --dataset D1 --config configs/d1.yaml \
+    --stage2-config configs/stage2_lora.yaml --corpus <corpus.jsonl> --seed 42 --per-device-batch-size 4
+python scripts/validate_stage2_adapter.py --adapter checkpoints/stage2/D1/seed42 --load
+```
+
+`<corpus.jsonl>` is the rationale training corpus, which is not available and
+whose construction the manuscript does not specify (L-25). The adapter used
+for the manuscript is likewise not available (L-31). `docs/STAGE2_LORA.md`
+gives the format, the filters and the exact configuration so an authors' corpus
+and adapter drop in without code changes.
 
 ### Statistics and tables
 
@@ -205,12 +237,13 @@ claiming any reproduction. The headline items:
 
 | Artefact | Obstacle |
 |---|---|
+| Any full-model (Stage 2-dependent) row | Manuscript adapter not available (L-31); rationale corpus unspecified (L-25) |
 | Table 5 baselines | No published baseline hyperparameters (L-18) |
 | Table 5(c) Recall@top-1% | Values exceed the arithmetic ceiling (A-01) |
 | Tables 6(b–d) | DeLong seed policy unspecified (A-03) |
 | Table 7 ablations | Stage 2 training corpus undescribed (L-25) |
-| Table 8 transfer | No feature-space alignment specified (A-14) |
-| Table 10 injection column | No untrusted text field exists (A-06) |
+| Table 8 transfer (original submission) | No feature-space alignment specified (A-14); withdrawn in the revised manuscript |
+| Injection column (original Table 10) | No untrusted text field exists (A-06); removed from the revised predictive-path tables, still presupposed by the rationale-pathway evaluation |
 | Supplementary S1 | Cost values absent from the main text (A-10) |
 | Escalation latency | Reported p99 is below the decoding floor (A-17) |
 

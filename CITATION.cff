@@ -12,8 +12,8 @@ abstract: >-
 type: software
 license: MIT
 repository-code: "https://github.com/abdulbasit12312/VR-FraudNet"
-version: "0.1.0"
-date-released: "2026-08-25"
+version: "1.0.0"
+date-released: "2026-09-18"
 keywords:
   - fraud detection
   - deterministic verifier
