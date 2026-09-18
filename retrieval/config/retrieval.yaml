@@ -1,49 +1,87 @@
 # Training-only retrieval index configuration (manuscript Section 4.3.4).
+#
+# Canonical, machine-readable statement of the retrieval setup. The runtime
+# (src/vrfraudnet/retrieval/index.py) hard-codes the same constants and
+# tests/test_reviewer_artifacts.py checks that the two agree. The human-readable
+# description is docs/RETRIEVAL_SETUP.md.
 
-version: 1
-source: "manuscript S4.3.4"
+version: 2
+schema_version: vrfraudnet-retrieval/1
+source: "manuscript S4.3.4, S4.8.2"
 
 encoder:
-  model: all-MiniLM-L6-v2        # MANUSCRIPT S4.3.4
-  similarity: cosine             # MANUSCRIPT S4.3.4
-  backend: faiss                 # MANUSCRIPT S4.3.4 / S4.8.2 (FAISS-GPU 1.8.0)
+  model: all-MiniLM-L6-v2                              # MANUSCRIPT S4.3.4
+  repository: sentence-transformers/all-MiniLM-L6-v2   # Hugging Face repository resolved by sentence-transformers
+  revision: null                                       # not recorded by the manuscript (L-29); pin with --encoder-revision
+  library: sentence-transformers
+  library_version: "2.7.0"                             # MANUSCRIPT S4.8.2
+  embedding_dimension: 384                             # model card of all-MiniLM-L6-v2; checked at build time
+  normalisation: l2                                    # required for cosine similarity as an inner product
   note: >-
     No substitute encoder is used when sentence-transformers is unavailable; a
     different embedding would change which demonstrations the language model
-    sees, so the code raises instead.
+    sees, so the code raises instead. The test-only hashing encoder exists for
+    interface tests and marks its index reproduction_grade: false.
+
+similarity:
+  metric: cosine                       # MANUSCRIPT S4.3.4
+  manuscript_backend: faiss            # MANUSCRIPT S4.3.4 / S4.8.2 (FAISS-GPU 1.8.0); index type not stated
+  implemented_backend: "numpy exact inner product over L2-normalised vectors"
+  equivalence: "identical to FAISS IndexFlatIP over the same normalised vectors (exact search)"
+  approximate_search: false            # IVF/HNSW would change results; not used (L-33)
+  index_training: none                 # flat exact index needs no training
+  tie_breaking: "stable argsort: earlier-inserted record first"   # ASSUMPTION L-33
+  device: cpu                          # exact search over the index runs on CPU; the encoder may use a GPU
 
 retrieval:
-  n_retrieved: 4                 # MANUSCRIPT S4.3.4
-  allow_fewer: true              # "When fewer than four eligible examples are available"
-  omit_when_empty: true          # "Retrieval is omitted when no eligible training example exists"
-  order: descending_similarity
+  n_retrieved: 4                       # MANUSCRIPT S4.3.4
+  allow_fewer: true                    # "When fewer than four eligible examples are available"
+  omit_when_empty: true                # "Retrieval is omitted when no eligible training example exists"
+  order: descending_similarity         # MANUSCRIPT S4.3.4 ("ordered by similarity")
+  query_construction: "the standardised transaction summary of the query transaction, encoded with the same model"
+  prompt_position: "after the structured evidence of the current transaction"   # MANUSCRIPT S4.3.4
 
 # Eligibility rules. Each is enforced structurally in
 # src/vrfraudnet/retrieval/index.py, not left to caller discipline.
 eligibility:
   partition:
     allowed: [train]
-    excluded: [validation, test, transfer, temporal_shock, adversarial]
+    excluded: [validation, test, transfer, temporal_shock, strict_inductive, adversarial]
     enforcement: "RetrievalRecord raises LeakageError at construction"
   verifier:
     require_schema_valid: true
     require_verifier_accepted: true
+    enforcement: "scripts/build_retrieval_index.py runs DeterministicVerifier on every target"
+  review_band:
+    indexed_band: review              # examples come from review-band transactions (S4.3.1, S4.3.4)
+    override_flag: --include-outside-review-band
   temporal:
-    require_strictly_earlier: true
+    require_strictly_earlier: true    # record.timestamp < query.timestamp
     note: "applies to datasets with explicit timestamps"
+    enforcement: "RetrievalIndex.query"
   identifier:
     exclude_same_transaction_id: true
     exclude_shared_direct_entity_id: true
     rationale: "prevents identifier-based retrieval leakage"
+    enforcement: "RetrievalIndex.query"
 
 # What each indexed record holds (manuscript S4.3.4).
 record_fields:
-  - standardised_transaction_summary
-  - temporal_and_graph_context
-  - stage1_probability_band
-  - structured_rationale
-  - machine_checkable_claims
-  - evidence_references
+  - record_id
+  - partition                          # always "train"
+  - timestamp
+  - summary                            # standardised transaction summary (the embedded text)
+  - probability_band                   # Stage 1 probability band
+  - rationale                          # structured rationale incl. claims and evidence_references
+  - entity_ids                         # direct entity identifiers, for the exclusion rule
+
+storage:
+  location: retrieval/index/<dataset>/         # git-ignored
+  files: [records.json, embeddings.npy, index_manifest.json]
+  manifest_records: [encoder, encoder_revision, embedding_dimension, n_records, corpus_sha256,
+                     retrieval_config_sha256, files.sha256, reproduction_grade, counts]
+  integrity: "RetrievalIndex.load refuses an index whose file checksums differ from its manifest"
+  build_command: "python scripts/build_retrieval_index.py --dataset D1 --config configs/d1.yaml --corpus <corpus.jsonl> --seed 42"
 
 # Manuscript S4.3.4, stated as a constraint on generation rather than retrieval.
 citation_rule: >-
