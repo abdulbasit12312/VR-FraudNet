@@ -57,7 +57,7 @@ and [`docs/ARTIFACT_AVAILABILITY.md`](docs/ARTIFACT_AVAILABILITY.md).
 | Rationale JSON schema (Draft 2020-12) | [`schemas/rationale_schema.json`](schemas/rationale_schema.json) | shared |
 | Grammar-masked decoding | [`src/vrfraudnet/models/grammar.py`](src/vrfraudnet/models/grammar.py) · [`docs/DECODING_GRAMMAR.md`](docs/DECODING_GRAMMAR.md) | shared |
 | Stage 2 LoRA configuration, training, loading | [`configs/stage2_lora.yaml`](configs/stage2_lora.yaml) · [`scripts/train_stage2_lora.py`](scripts/train_stage2_lora.py) · [`scripts/validate_stage2_adapter.py`](scripts/validate_stage2_adapter.py) · [`docs/STAGE2_LORA.md`](docs/STAGE2_LORA.md) | shared |
-| **Stage 2 LoRA adapter weights** | [`artifacts/lora/README.md`](artifacts/lora/README.md) | **NOT AVAILABLE** — the manuscript adapter is absent from every accessible project location; none is fabricated |
+| **Stage 2 LoRA adapter weights** | [`artifacts/lora/README.md`](artifacts/lora/README.md) | **NOT AVAILABLE** — a standalone archival copy of the fitted adapter was not retained as a release-ready artifact during the original experimental workflow; none is fabricated. Statement and what is provided instead: [`artifacts/lora/README.md`](artifacts/lora/README.md) |
 | Base model | `meta-llama/Meta-Llama-3.1-8B-Instruct` (gated, Llama 3.1 Community License) | not redistributed; **immutable revision not recorded** (L-29) |
 | Stage 2 rationale training corpus | format in [`docs/STAGE2_LORA.md`](docs/STAGE2_LORA.md), synthetic example [`examples/stage2_corpus_example.jsonl`](examples/stage2_corpus_example.jsonl) | **NOT AVAILABLE; construction unspecified** (L-25) |
 | Retrieval setup | [`retrieval/config/retrieval.yaml`](retrieval/config/retrieval.yaml) · [`src/vrfraudnet/retrieval/index.py`](src/vrfraudnet/retrieval/index.py) · [`scripts/build_retrieval_index.py`](scripts/build_retrieval_index.py) · [`docs/RETRIEVAL_SETUP.md`](docs/RETRIEVAL_SETUP.md) | shared; training-only, strictly-earlier, identifier-excluded |
@@ -65,7 +65,7 @@ and [`docs/ARTIFACT_AVAILABILITY.md`](docs/ARTIFACT_AVAILABILITY.md).
 | Experiment configurations | [`configs/`](configs/) — every value tagged MANUSCRIPT / ASSUMPTION / DERIVED | shared |
 | Manuscript seed set | [`configs/manuscript_seeds.yaml`](configs/manuscript_seeds.yaml) ↔ `vrfraudnet.seeds.MANUSCRIPT_SEEDS` (test-synchronised) | shared |
 | Environment | [`requirements.txt`](requirements.txt) · [`environment.yml`](environment.yml) · reference machine in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) | shared |
-| Versioned archive, manifest, checksums | [`REPRODUCIBILITY_MANIFEST.json`](REPRODUCIBILITY_MANIFEST.json) · [`docs/RELEASE.md`](docs/RELEASE.md) · tag `v1.0.0-reproducibility` | built by `scripts/build_reproducibility_bundle.py`; publication status in `docs/RELEASE.md` |
+| Versioned archive, manifest, checksums | [`REPRODUCIBILITY_MANIFEST.json`](REPRODUCIBILITY_MANIFEST.json) · [`docs/RELEASE.md`](docs/RELEASE.md) · tag `v1.0.0-manuscript-revision` | built by `scripts/build_reproducibility_bundle.py`; publication status in `docs/RELEASE.md` |
 | What cannot be reproduced and why | [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) · [`docs/MANUSCRIPT_AUDIT.md`](docs/MANUSCRIPT_AUDIT.md) | — |
 
 Three different things, kept apart throughout this repository:
@@ -87,7 +87,7 @@ Four levels of checking, from no data to the full sweep:
 
 ```bash
 git clone https://github.com/abdulbasit12312/VR-FraudNet.git && cd VR-FraudNet
-git checkout v1.0.0-reproducibility
+git checkout v1.0.0-manuscript-revision
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt pytest jsonschema
 
@@ -297,7 +297,7 @@ grammar.token_mask('{"verdict":', ['"fraud"', '"maybe"'])   # [True, False]
 ## Citation
 
 See [`CITATION.cff`](CITATION.cff). Cite the manuscript for the method and this
-repository (tag `v1.0.0-reproducibility`, version 1.0.0) for the
+repository (tag `v1.0.0-manuscript-revision`, version 1.0.0) for the
 implementation. The manuscript's DOI is unassigned at the time of this release
 and must be filled in when it is known.
 

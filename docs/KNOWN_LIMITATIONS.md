@@ -251,10 +251,9 @@ of these choices in the run record.
 ### L-31 — Stage 2 adapter save format, and the adapter's absence
 **DOCUMENTED DEFAULT** for the format: the manuscript does not state one;
 safetensors (the PEFT default) is used and checked by
-`scripts/validate_stage2_adapter.py`. **NOT AVAILABLE** for the artefact: the
-adapter trained for the manuscript is not present in the working tree, the full
-git history, any branch or tag, Git LFS, or the maintainers' project
-directories. Exact reproduction of every Stage 2-dependent number is blocked by
+`scripts/validate_stage2_adapter.py`. **NOT AVAILABLE** for the artefact: The exact trained LoRA adapter checkpoint used in the original experiments is not included because a standalone archival copy of the fitted adapter was not retained as a release-ready artifact during the original experimental workflow. The repository provides the complete LoRA training configuration and implementation, including the base-model specification, target modules, rank, scaling factor, dropout, optimizer settings, learning rate, training epochs, sequence lengths, and predefined seeds, allowing the adaptation procedure to be rerun. Exact checkpoint-level reproduction of the original Stage 2 model is therefore not possible from the currently released materials.
+Searched: the working tree, the full git history, every branch and tag, Git LFS,
+and the maintainers' project directories. Exact reproduction of every Stage 2-dependent number is blocked by
 this independently of L-25. Full statement: `artifacts/lora/README.md`.
 
 ### L-32 — counterfactual target construction

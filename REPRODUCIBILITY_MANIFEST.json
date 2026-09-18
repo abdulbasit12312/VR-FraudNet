@@ -56,21 +56,21 @@
       "src/vrfraudnet/retrieval/index.py": "25c2d0d38fb131f045fff399a7ca800c74a58abba8c102406bd7d063e87b9b2b"
     },
     "reviewer_documentation": {
-      "docs/ARTIFACT_AVAILABILITY.md": "e4fe566a4ad477b69241c403b954c2c03e8185814ff54348ffc861a0a1245e75",
+      "docs/ARTIFACT_AVAILABILITY.md": "be7d4f4874aa433dba5b6c0a139c086eab39309febe809b47acaef1b5b3d71d3",
       "docs/DATA_AVAILABILITY.md": "050aa45633554df2cc244299d9628309cf59413221fefa3f5d662909f7455758",
-      "docs/KNOWN_LIMITATIONS.md": "f0c503e222fdedd603f6567e70f46298cbcb1a16a212b9d7e7eb423a28733193",
+      "docs/KNOWN_LIMITATIONS.md": "e12694bc7588dde2aed945fe0af80a9c28b0881e934266a293ee43302235d499",
       "docs/MANUSCRIPT_AUDIT.md": "f439c1dee74f12e33d6cfea447161a92bfde67f5150f8a7556788adf9541b3a8",
       "docs/MANUSCRIPT_CODE_MAP.md": "3b296efb363557ef608de74daa37e15c63e27ae4484d0a0ded5858ce328c879e",
-      "docs/RELEASE.md": "5e11e40bac0dcdd95ddf1e87babfe01681b82d298851b70b975d95a0e93cdb61",
+      "docs/RELEASE.md": "f731247cb811bb0f6d2b30b98f84cc1d25f367599953136084c50ec6c9ee3d99",
       "docs/REPRODUCIBILITY.md": "82a8cdbe05b53c28458700823a435ceb23043db1c24a8f7905ece15e1eb3f241",
-      "docs/REVIEWER_REPRODUCIBILITY.md": "2b80092db8d484e1dbba0fff18331e0347f4e511a43f5650e60ae27d21e3c096"
+      "docs/REVIEWER_REPRODUCIBILITY.md": "10a7922f39d79167085d9db972e2bd9ec6fe3e7d24367f83581601276855b077"
     },
     "seeds": {
       "configs/manuscript_seeds.yaml": "31823cfd9deb10c5c0d6635a0be343f20e8232e82d7f4aa7071a101185699af4",
       "src/vrfraudnet/seeds.py": "8bed70b9e13de869e77133b50ad5c3ab9ef68a3baec31a42cbaa048699f79897"
     },
     "stage2_lora": {
-      "artifacts/lora/README.md": "ea21da0ed8875f6ae530694e138eaf033431cd522ead4811dd6d747502fb8bae",
+      "artifacts/lora/README.md": "0592f10a54e6bd0b341a6c1fd0b8cae61b77d2c4ccc7c6bfc3d0665846a0312b",
       "configs/stage2_lora.yaml": "448f13a03ec711cf950500f53a6bd171f1eb0ebfff6bf89ad33064eddb78645d",
       "docs/STAGE2_LORA.md": "46b3ce1816d568b9f94bfcda1f3b743004965a266c76ab3076848b216faa238c",
       "examples/stage2_corpus_example.jsonl": "b8710d16382aa3835e823594baab71143909958bfd7b63a49ad52a231a634bde",
@@ -87,7 +87,7 @@
       "verifier/rules/claim_primitives.yaml": "4c1723fce9e5fb057afa8456de0758a8b7ac2ae95b5f7c337659cb59dd0ce5c9"
     }
   },
-  "created_utc": "2026-09-18T03:58:18+00:00",
+  "created_utc": "2026-09-18T13:07:21+00:00",
   "datasets": {
     "D1": {
       "name": "BAF Base",
@@ -142,9 +142,9 @@
     "CITATION.cff": "25b27f6129c52d42b1c43bd0eda1b7e86557fa767e51bf4caf79167c9fb5052f",
     "LICENSE": "fc3bb75bc1918178964015b21564f0fda4e6348ae82c2234fb5cd48137cd0a9e",
     "Makefile": "4b86dfc9082288bc52203078bdef8b144c5ca8d1effb3dbf5d35854b506d94aa",
-    "README.md": "fd59fbd5eb1b5283dd05a325e70da2a8f9d4542d86d7cbe23180a2653722c622",
+    "README.md": "057d6f8223f83b7846181ba610b41319c108a91fbcf48f2b2e5500388413a4e6",
     "adversarial/families/edit_families.yaml": "641a374623f4c79cf51f5d67405e30bc7d568ed28d94d5d9c1281d9baae949c5",
-    "artifacts/lora/README.md": "ea21da0ed8875f6ae530694e138eaf033431cd522ead4811dd6d747502fb8bae",
+    "artifacts/lora/README.md": "0592f10a54e6bd0b341a6c1fd0b8cae61b77d2c4ccc7c6bfc3d0665846a0312b",
     "configs/ablations.yaml": "83d1eb014e5a173449a1384f21a4019ef0e2c4068f854f2917823c340a1e980c",
     "configs/base.yaml": "a0223624c7c87bff42aff44f48a2938c0311c16be238a035375ac863102076e9",
     "configs/baselines.yaml": "9d1c62d054f5271bbd75d7550668cf036b82839c90784ef2398f986607e9ae7d",
@@ -158,18 +158,18 @@
     "configs/stage2_lora.yaml": "448f13a03ec711cf950500f53a6bd171f1eb0ebfff6bf89ad33064eddb78645d",
     "datasets/README.md": "131e6053839f6d5a2edb12c4151a36f3521ff7c1fbd82c5aca4945c958553b6b",
     "datasets/checksums/README.md": "535c3865a161158eaeafc26f0c133feb9d41f8efefe0edfbbccef843182fac4d",
-    "docs/ARTIFACT_AVAILABILITY.md": "e4fe566a4ad477b69241c403b954c2c03e8185814ff54348ffc861a0a1245e75",
+    "docs/ARTIFACT_AVAILABILITY.md": "be7d4f4874aa433dba5b6c0a139c086eab39309febe809b47acaef1b5b3d71d3",
     "docs/DATA_AVAILABILITY.md": "050aa45633554df2cc244299d9628309cf59413221fefa3f5d662909f7455758",
     "docs/DECODING_GRAMMAR.md": "db77c6072ad380bafbb6cd046aebb6c90e23a7d2928f5c00e63b3286c074adfc",
     "docs/EDIT_GENERATORS.md": "4107c7fdadfd516f52161123b414ae1f5eefa7baeed36a0d96d32d5803e4501a",
-    "docs/KNOWN_LIMITATIONS.md": "f0c503e222fdedd603f6567e70f46298cbcb1a16a212b9d7e7eb423a28733193",
+    "docs/KNOWN_LIMITATIONS.md": "e12694bc7588dde2aed945fe0af80a9c28b0881e934266a293ee43302235d499",
     "docs/MANUSCRIPT_AUDIT.md": "f439c1dee74f12e33d6cfea447161a92bfde67f5150f8a7556788adf9541b3a8",
     "docs/MANUSCRIPT_CODE_MAP.md": "3b296efb363557ef608de74daa37e15c63e27ae4484d0a0ded5858ce328c879e",
-    "docs/RELEASE.md": "5e11e40bac0dcdd95ddf1e87babfe01681b82d298851b70b975d95a0e93cdb61",
-    "docs/RELEASE_NOTES_v1.0.0.md": "c202f762b4b6582845c1f18d83ae01ac140425ae7260b5d19e8b6ff0c72766ae",
+    "docs/RELEASE.md": "f731247cb811bb0f6d2b30b98f84cc1d25f367599953136084c50ec6c9ee3d99",
+    "docs/RELEASE_NOTES_v1.0.0-manuscript-revision.md": "8a82c781fe813e2f2d3d94c2ab775114425aaed6785d448e61b060091c3d80df",
     "docs/REPRODUCIBILITY.md": "82a8cdbe05b53c28458700823a435ceb23043db1c24a8f7905ece15e1eb3f241",
     "docs/RETRIEVAL_SETUP.md": "848b9b68098e120e17de48373029672f52c3c239306c1d91cbec334b9b4f2f72",
-    "docs/REVIEWER_REPRODUCIBILITY.md": "2b80092db8d484e1dbba0fff18331e0347f4e511a43f5650e60ae27d21e3c096",
+    "docs/REVIEWER_REPRODUCIBILITY.md": "10a7922f39d79167085d9db972e2bd9ec6fe3e7d24367f83581601276855b077",
     "docs/STAGE2_LORA.md": "46b3ce1816d568b9f94bfcda1f3b743004965a266c76ab3076848b216faa238c",
     "environment.yml": "d015bc7b7fc4d9e7b28feb8c87ce0830022a8235a70bef01803d3883cfd771fd",
     "evaluation/protocols/latency.yaml": "2def14cab38b31dd22e1a8efa22367fd15a1377946d5856eddf19a6fab16f8dd",
@@ -191,7 +191,7 @@
     "scripts/_common.py": "8543ead25b2f3e01f38429e26fca3cd66467c39c0a93f496ac5f98a933e7357f",
     "scripts/audit_manuscript.py": "64c843dd45c3b2f7faa66aacf88768506f7287b32fb01995d8fbca2076ccd9cf",
     "scripts/audit_reviewer_artifacts.py": "9ee576a7c860dfddb16a325cfdac2461b99f14c4e86b8182040e2fff9c730305",
-    "scripts/build_reproducibility_bundle.py": "c40f9765b4eadbc8be306c0008bd7ba4deca933afc83ca937f266a524abbb5d5",
+    "scripts/build_reproducibility_bundle.py": "3d623bf07e508d4cfeca5fc98cd407341a251be14dc47a9f9bcbf7035cdc4145",
     "scripts/build_retrieval_index.py": "afb5427071b1fc89c194ec1d6f8fcf71b7ead12295ac15e6ff69ec4caec87697",
     "scripts/calibrate.py": "486f3c5582d5e052a32f58054fa51443157dfa9871c9646e1f931196ac3de138",
     "scripts/evaluate.py": "023e6a3aae543818fafcb512a9877225f322b5d6fec16c7664dda9577051bc3d",
@@ -244,7 +244,7 @@
     "src/vrfraudnet/models/stage1_triage.py": "dce9d157d61e402987df6ae87b39cff5255f72337ea702a384bafdaaee2b039d",
     "src/vrfraudnet/models/stage2_rationale.py": "ade4633316ab2f9d7e68b53a2c811cae41a5696a33bf82d2766da07938127952",
     "src/vrfraudnet/models/stage4_calibration.py": "a60410f4a9ded6bdfe6f11047d979215f0893b4d62531ff6b990454928ac0cff",
-    "src/vrfraudnet/reproducibility.py": "67f20abc6859ac3720524bc2f771c6c8fb89ec3f506c5d92cbc76e3530d0709c",
+    "src/vrfraudnet/reproducibility.py": "5cc5fc28c07b3dbd29caf5f1e2c665f7609b4646c90268e0051b624daea0a38b",
     "src/vrfraudnet/retrieval/__init__.py": "77f1b68b41b8e79d9b7a8858b9eef140b41e2a1fdf0c45dacb66ac19b270ea00",
     "src/vrfraudnet/retrieval/index.py": "25c2d0d38fb131f045fff399a7ca800c74a58abba8c102406bd7d063e87b9b2b",
     "src/vrfraudnet/seeds.py": "8bed70b9e13de869e77133b50ad5c3ab9ef68a3baec31a42cbaa048699f79897",
@@ -279,10 +279,10 @@
     "verifier/rules/claim_primitives.yaml": "4c1723fce9e5fb057afa8456de0758a8b7ac2ae95b5f7c337659cb59dd0ce5c9"
   },
   "git": {
-    "commit": "72b4594f07212a008bec037db38fe3217fc0a5cb",
+    "commit": "82b2b812718d7aecad0e8a2e9a224cdc56a31ce1",
     "note": "File hashes are computed from the working tree at 'commit'. When this manifest is itself committed, the commit that adds it is the child of 'commit'; the release archive regenerates the manifest at the tagged commit.",
     "remote": "https://github.com/abdulbasit12312/VR-FraudNet",
-    "tag": "v1.0.0-reproducibility",
+    "tag": null,
     "working_tree_dirty": true
   },
   "known_limitation_references": {
@@ -325,7 +325,7 @@
     ]
   },
   "stage2_adapter": {
-    "detail": "The LoRA adapter used for the manuscript is not present in the working tree, the git history, any tag or branch, Git LFS, or the maintainers' project directories. No adapter has been fabricated.",
+    "detail": "The exact trained LoRA adapter checkpoint used in the original experiments is not included because a standalone archival copy of the fitted adapter was not retained as a release-ready artifact during the original experimental workflow. Searched: working tree, git history, tags, branches, Git LFS, project directories. No adapter has been fabricated.",
     "location": null,
     "sha256": null,
     "statement": "artifacts/lora/README.md",

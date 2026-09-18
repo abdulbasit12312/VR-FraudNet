@@ -1,13 +1,19 @@
 # Stage 2 LoRA adapter — availability statement
 
-**Status: the LoRA adapter used to produce the manuscript's results is NOT
-PRESENT in the accessible project materials. No adapter is distributed with
-this repository, and none has been fabricated to stand in for it.**
+**Status: NOT AVAILABLE.** The exact trained LoRA adapter checkpoint used in the original experiments is not included because a standalone archival copy of the fitted adapter was not retained as a release-ready artifact during the original experimental workflow. The repository provides the complete LoRA training configuration and implementation, including the base-model specification, target modules, rank, scaling factor, dropout, optimizer settings, learning rate, training epochs, sequence lengths, and predefined seeds, allowing the adaptation procedure to be rerun. Exact checkpoint-level reproduction of the original Stage 2 model is therefore not possible from the currently released materials.
 
-This directory is intentionally empty apart from this file. Anything that
-appears here in a future release must carry a SHA-256 in
-`REPRODUCIBILITY_MANIFEST.json` and a training record produced by
-`scripts/train_stage2_lora.py`.
+No adapter is distributed with this repository, and none has been fabricated or newly trained to stand in for the original. This directory is intentionally empty apart from this file. Anything that appears here in a future release must carry a SHA-256 in `REPRODUCIBILITY_MANIFEST.json` and a training record produced by `scripts/train_stage2_lora.py`.
+
+| Field | Value |
+|---|---|
+| Base model | `meta-llama/Meta-Llama-3.1-8B-Instruct` (manuscript S4.3.1), frozen; immutable Hugging Face revision not recorded (L-29) |
+| Adaptation | LoRA on `q_proj, k_proj, v_proj, o_proj`; rank 16, alpha 32, dropout 0.05 |
+| Training | AdamW, lr 2e-4, weight decay 0.01, 5 % linear warm-up, 3 epochs, bfloat16, effective batch size 32; review-band training-partition transactions only |
+| Checkpoint selection rule | the checkpoint with the lowest validation loss; schema-valid generation rate and verifier acceptance rate on evidence-supported validation examples as secondary criteria (manuscript S4.3.1, S4.8.1) |
+| Seeds | the ten of `configs/manuscript_seeds.yaml` |
+| Exact adapter checkpoint used for the manuscript results | **not included** (see status) |
+| SHA-256 of that checkpoint | none exists to publish |
+| Full configuration | `configs/stage2_lora.yaml` |
 
 ## What was searched
 

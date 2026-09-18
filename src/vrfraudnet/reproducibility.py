@@ -189,8 +189,10 @@ ADAPTER_STATUS = {
     "location": None,
     "sha256": None,
     "detail": (
-        "The LoRA adapter used for the manuscript is not present in the working tree, the "
-        "git history, any tag or branch, Git LFS, or the maintainers' project directories. "
+        "The exact trained LoRA adapter checkpoint used in the original experiments is not "
+        "included because a standalone archival copy of the fitted adapter was not retained "
+        "as a release-ready artifact during the original experimental workflow. Searched: "
+        "working tree, git history, tags, branches, Git LFS, project directories. "
         "No adapter has been fabricated."
     ),
 }

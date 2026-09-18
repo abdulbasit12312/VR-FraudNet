@@ -1,10 +1,12 @@
-# VR-FraudNet v1.0.0-reproducibility
+# VR-FraudNet v1.0.0-manuscript-revision
+
+Reproducibility snapshot associated with the revised manuscript.
 
 **Manuscript:** *Grounding language models with deterministic verifiers for fraud detection* (revised submission).
 
 **Purpose.** Reviewer-requested reproducibility release: direct access to the deterministic verifier rules, the rationale JSON schema, the grammar-constrained decoder, the Stage 2 LoRA configuration and adapter-availability statement, the retrieval configuration and index builder, the adversarial edit generators, every experiment configuration, and the exact manuscript seed set, packaged as a versioned archive with per-file SHA-256 checksums and a manifest.
 
-**Commit.** The commit this tag points at: `git rev-list -n 1 v1.0.0-reproducibility`. The `git.commit` field of the attached `REPRODUCIBILITY_MANIFEST.json` records the same value.
+**Commit.** The commit this tag points at: `git rev-list -n 1 v1.0.0-manuscript-revision`. The `git.commit` field of the attached `REPRODUCIBILITY_MANIFEST.json` records the same value.
 
 ## Reviewer-requested artefacts
 
@@ -46,7 +48,7 @@ Full sweep: `bash reproduce_all.sh` (prints the plan), `bash reproduce_all.sh --
 
 ## Unavailable materials and reasons
 
-* **Stage 2 LoRA adapter used for the manuscript** — absent from the working tree, the full git history, every branch and tag, Git LFS, and the maintainers' project directories. Not a licensing restriction. No adapter has been fabricated or trained as a stand-in. Exact reproduction of every Stage 2-dependent number is therefore not claimed. (L-31)
+* **Stage 2 LoRA adapter used for the manuscript.** The exact trained LoRA adapter checkpoint used in the original experiments is not included because a standalone archival copy of the fitted adapter was not retained as a release-ready artifact during the original experimental workflow. The repository provides the complete LoRA training configuration and implementation, including the base-model specification, target modules, rank, scaling factor, dropout, optimizer settings, learning rate, training epochs, sequence lengths, and predefined seeds, allowing the adaptation procedure to be rerun. Exact checkpoint-level reproduction of the original Stage 2 model is therefore not possible from the currently released materials. Nothing has been fabricated or trained as a stand-in. (L-31)
 * **Stage 2 rationale training corpus** — absent, and the manuscript does not state how target rationales were authored (rule, teacher model or human). The corpus format, loader, filters and training script are shipped so an authors' corpus drops in unchanged. (L-25)
 * **Immutable revisions of `meta-llama/Meta-Llama-3.1-8B-Instruct` and `sentence-transformers/all-MiniLM-L6-v2`** — not recorded by the manuscript; configuration fields are `null` and the scripts record whatever the operator pins. (L-29)
 * **Base-model and encoder weights** — third-party licences (Llama 3.1 Community License; Apache-2.0); obtained from the Hugging Face Hub, never bundled.
@@ -63,10 +65,8 @@ D1–D5 are not redistributed. Provider links, files, licences and the checksum 
 
 ## Citation
 
-Cite the manuscript for the method and this release for the implementation: `CITATION.cff` (software v1.0.0, tag `v1.0.0-reproducibility`).
+Cite the manuscript for the method and this release for the implementation: `CITATION.cff` (software v1.0.0, tag `v1.0.0-manuscript-revision`).
 
 ## Release status
 
-**PUBLISHED** at https://github.com/abdulbasit12312/VR-FraudNet/releases/tag/v1.0.0-reproducibility (tag at commit `72b4594f07212a008bec037db38fe3217fc0a5cb`).
-
-Archive SHA-256: `ebff6966501442c1885b48b984000067601e9cbe44b925e0b12d3092ba8199a5`
+**PREPARED, NOT PUBLISHED.** This file is updated to *published*, with the archive SHA-256 and the release URL, only after `gh release create` has succeeded and the assets are visible on GitHub.

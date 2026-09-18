@@ -8,10 +8,10 @@ verified and published, and the exact status of the current release.
 | Field | Value |
 |---|---|
 | Release version | `1.0.0` (`pyproject.toml`, `CITATION.cff`) |
-| Git tag | `v1.0.0-reproducibility` |
+| Git tag | `v1.0.0-manuscript-revision` |
 | Archive | `VR-FraudNet-reproducibility-1.0.0.tar.gz` |
 | Release assets | the archive, `SHA256SUMS`, `REPRODUCIBILITY_MANIFEST.json` |
-| Commit | the commit the tag points at: `git rev-list -n 1 v1.0.0-reproducibility` |
+| Commit | the commit the tag points at: `git rev-list -n 1 v1.0.0-manuscript-revision` |
 
 The archive's own SHA-256 is published in the GitHub Release notes and in the
 `SHA256SUMS` asset. It is deliberately **not** written into any file inside
@@ -39,7 +39,7 @@ pattern.
 ## Building
 
 ```bash
-python scripts/build_reproducibility_bundle.py --version 1.0.0 --tag v1.0.0-reproducibility
+python scripts/build_reproducibility_bundle.py --version 1.0.0 --tag v1.0.0-manuscript-revision
 # writes dist/VR-FraudNet-reproducibility-1.0.0.tar.gz and dist/SHA256SUMS and
 # dist/REPRODUCIBILITY_MANIFEST.json, prints the archive SHA-256
 ```
@@ -77,11 +77,11 @@ SHA256SUMS`.
 ## Publishing
 
 ```bash
-git tag -a v1.0.0-reproducibility -m "Reproducibility release for the revised manuscript"
-git push origin v1.0.0-reproducibility
-gh release create v1.0.0-reproducibility \
+git tag -a v1.0.0-manuscript-revision -m "Reproducibility release for the revised manuscript"
+git push origin v1.0.0-manuscript-revision
+gh release create v1.0.0-manuscript-revision \
   dist/VR-FraudNet-reproducibility-1.0.0.tar.gz dist/SHA256SUMS dist/REPRODUCIBILITY_MANIFEST.json \
-  --title "v1.0.0-reproducibility" --notes-file docs/RELEASE_NOTES_v1.0.0.md
+  --title "v1.0.0-manuscript-revision" --notes-file docs/RELEASE_NOTES_v1.0.0-manuscript-revision.md
 ```
 
 Authentication is through `gh auth login` or a credential helper configured
@@ -90,7 +90,15 @@ outside the repository. No token is ever written into this repository.
 ## Status of the current release
 
 See the "Release status" section at the end of
-`docs/RELEASE_NOTES_v1.0.0.md`, which is updated when the release is actually
+`docs/RELEASE_NOTES_v1.0.0-manuscript-revision.md`, which is updated when the release is actually
 published. Until it says *published*, the release has been **prepared, not
 published**, and the archive should be built locally from the tag with the
 command above.
+
+## Optional: DOI via Zenodo
+
+A fixed GitHub Release already satisfies the request for an immutable
+archive. For a citable DOI, the repository owner can enable the GitHub–Zenodo
+integration (https://zenodo.org/account/settings/github/) and re-publish the
+release; Zenodo then mints a DOI for that exact tag. This requires the owner's
+Zenodo login and is not something the build scripts can do.

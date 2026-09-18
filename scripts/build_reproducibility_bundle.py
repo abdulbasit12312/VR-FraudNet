@@ -2,7 +2,7 @@
 
 Usage
 -----
-    python scripts/build_reproducibility_bundle.py --version 1.0.0 --tag v1.0.0-reproducibility
+    python scripts/build_reproducibility_bundle.py --version 1.0.0 --tag v1.0.0-manuscript-revision
     python scripts/build_reproducibility_bundle.py --write-manifest     # refresh the committed manifest
     python scripts/build_reproducibility_bundle.py --check-manifest     # CI: committed manifest is current
     python scripts/build_reproducibility_bundle.py --dry-run            # list what would be bundled
