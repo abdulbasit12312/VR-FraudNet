@@ -58,3 +58,75 @@ jobs:
 
       - name: Synthetic end-to-end demo
         run: python examples/run_minimal_demo.py
+
+  reproducibility-audit:
+    name: reviewer artefacts and reproducibility bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest jsonschema
+
+      - name: Secret and hygiene scan
+        run: |
+          python -m pytest -q tests/test_repo_hygiene.py
+          if git grep -n -E 'ghp_[A-Za-z0-9]{20,}|github_pat_|hf_[A-Za-z0-9]{30,}|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN .*PRIVATE KEY' -- . ':!tests/test_repo_hygiene.py' ':!src/vrfraudnet/reproducibility.py' ':!.github/workflows/ci.yml'; then
+            echo "secret-like pattern found"; exit 1; fi
+
+      - name: Schema, verifier rules, grammar
+        run: python scripts/validate_rationale_schema.py
+
+      - name: Manuscript consistency audit (both manuscript versions)
+        run: |
+          python scripts/audit_manuscript.py
+          python scripts/audit_manuscript.py --revision revised
+
+      - name: Reviewer artefact map audit
+        run: python scripts/audit_reviewer_artifacts.py
+
+      - name: Committed manifest is current
+        run: python scripts/build_reproducibility_bundle.py --check-manifest
+
+      - name: Stage 2 training interface (dry run on the synthetic corpus, no weights)
+        run: |
+          python scripts/train_stage2_lora.py --dataset D2 --config configs/d2.yaml \
+            --stage2-config configs/stage2_lora.yaml \
+            --corpus examples/stage2_corpus_example.jsonl --seed 42 --dry-run
+          python scripts/validate_stage2_adapter.py --adapter artifacts/lora/manuscript || test $? -eq 2
+
+      - name: Retrieval index interface (test encoder, no download)
+        run: |
+          python scripts/build_retrieval_index.py --dataset D2 --config configs/d2.yaml \
+            --corpus examples/stage2_corpus_example.jsonl --seed 42 \
+            --encoder test-hashing --output-dir /tmp/vrfraudnet-index
+
+      - name: Build and verify the reproducibility bundle (dry run + real build)
+        run: |
+          python scripts/build_reproducibility_bundle.py --dry-run
+          python scripts/build_reproducibility_bundle.py --output-dir dist
+          python scripts/verify_reproducibility_bundle.py dist/VR-FraudNet-reproducibility-*.tar.gz
+
+      - name: Reviewer artefact tests
+        run: python -m pytest -q tests/test_reviewer_artifacts.py
+
+      - name: Upload bundle as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: reproducibility-bundle
+          path: |
+            dist/VR-FraudNet-reproducibility-*.tar.gz
+            dist/SHA256SUMS
+            dist/REPRODUCIBILITY_MANIFEST.json
+          if-no-files-found: error
