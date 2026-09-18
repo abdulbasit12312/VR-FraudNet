@@ -69,4 +69,6 @@ Cite the manuscript for the method and this release for the implementation: `CIT
 
 ## Release status
 
-**PREPARED, NOT PUBLISHED.** This file is updated to *published*, with the archive SHA-256 and the release URL, only after `gh release create` has succeeded and the assets are visible on GitHub.
+**PUBLISHED** at https://github.com/abdulbasit12312/VR-FraudNet/releases/tag/v1.0.0-manuscript-revision (tag at commit `a71efdc7ee04ffa9a3475659470cc2451f850eaf`).
+
+Archive SHA-256: `28d5f62ca7b921d1d52cf61c24da537a4f4c7a19905ed111fd4389dae0b2428a`

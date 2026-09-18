@@ -87,7 +87,7 @@
       "verifier/rules/claim_primitives.yaml": "4c1723fce9e5fb057afa8456de0758a8b7ac2ae95b5f7c337659cb59dd0ce5c9"
     }
   },
-  "created_utc": "2026-09-18T13:07:21+00:00",
+  "created_utc": "2026-09-18T13:11:59+00:00",
   "datasets": {
     "D1": {
       "name": "BAF Base",
@@ -166,7 +166,7 @@
     "docs/MANUSCRIPT_AUDIT.md": "f439c1dee74f12e33d6cfea447161a92bfde67f5150f8a7556788adf9541b3a8",
     "docs/MANUSCRIPT_CODE_MAP.md": "3b296efb363557ef608de74daa37e15c63e27ae4484d0a0ded5858ce328c879e",
     "docs/RELEASE.md": "f731247cb811bb0f6d2b30b98f84cc1d25f367599953136084c50ec6c9ee3d99",
-    "docs/RELEASE_NOTES_v1.0.0-manuscript-revision.md": "8a82c781fe813e2f2d3d94c2ab775114425aaed6785d448e61b060091c3d80df",
+    "docs/RELEASE_NOTES_v1.0.0-manuscript-revision.md": "2d3966a58e8a8aae12ea8e01e5fa1fda71363efebf7b6b3086b4b86f59b03649",
     "docs/REPRODUCIBILITY.md": "82a8cdbe05b53c28458700823a435ceb23043db1c24a8f7905ece15e1eb3f241",
     "docs/RETRIEVAL_SETUP.md": "848b9b68098e120e17de48373029672f52c3c239306c1d91cbec334b9b4f2f72",
     "docs/REVIEWER_REPRODUCIBILITY.md": "10a7922f39d79167085d9db972e2bd9ec6fe3e7d24367f83581601276855b077",
@@ -279,10 +279,10 @@
     "verifier/rules/claim_primitives.yaml": "4c1723fce9e5fb057afa8456de0758a8b7ac2ae95b5f7c337659cb59dd0ce5c9"
   },
   "git": {
-    "commit": "82b2b812718d7aecad0e8a2e9a224cdc56a31ce1",
+    "commit": "a71efdc7ee04ffa9a3475659470cc2451f850eaf",
     "note": "File hashes are computed from the working tree at 'commit'. When this manifest is itself committed, the commit that adds it is the child of 'commit'; the release archive regenerates the manifest at the tagged commit.",
     "remote": "https://github.com/abdulbasit12312/VR-FraudNet",
-    "tag": null,
+    "tag": "v1.0.0-manuscript-revision",
     "working_tree_dirty": true
   },
   "known_limitation_references": {
