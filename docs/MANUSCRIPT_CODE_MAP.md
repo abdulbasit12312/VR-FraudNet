@@ -25,7 +25,7 @@ Seeds are always the ten from Section 4.8.1: `42, 123, 456, 789, 2024, 3141,
 | Table 1, D1 split | `data/splits.py::chronological_holdout_by_group` | `configs/d1.yaml` `split.*` | months 0–5 / 6–7 | `results/prepared/D1/report.json` | ✅ |
 | Table 1, D2 split | `data/splits.py::chronological_fraction_split` | `configs/d2.yaml` | temporal 60/20/20 | `results/prepared/D2/report.json` | ✅ |
 | Table 1, D3 split | `data/splits.py::quantile_time_split` | `configs/d3.yaml` | `TransactionDT` q=0.8 | `results/prepared/D3/report.json` | ✅ |
-| Table 1, D3 5-fold expanding CV | `data/splits.py::expanding_window_folds` | `configs/d3.yaml` `split.n_cv_folds` | 5 folds | `results/robustness/D3/*` | ⚠️ initial window size is L-03 |
+| Table 1 / revised Table 8(d), D3 5-fold expanding CV | `data/splits.py::expanding_window_folds(cut_quantiles=...)` | `configs/d3.yaml` `split.cv_cut_quantiles` | cuts at q = 0.60/0.70/0.80/0.85/0.90, test-to-end | `results/robustness/D3/*` | ⚠️ folds now MANUSCRIPT (L-03 superseded); the fold driver is not wired into `scripts/robustness.py` |
 | Table 1, D4 strict-inductive | `data/splits.py::strict_inductive_split` | `configs/d4.yaml` | t 1–34 / 35–49 | `results/prepared/D4/report.json` | ⚠️ validation range is L-04 |
 | Table 1, D5 node-arrival | `data/splits.py::node_arrival_split` | `configs/d5.yaml` | labelled nodes only | `results/prepared/D5/report.json` | ⚠️ proportions are L-05 |
 | Table 2, D1 preprocessing | `data/baf.py::prepare` | `configs/d1.yaml` `preprocess.*` | train months only | same report | ⚠️ feature count contradiction A-08 |
@@ -58,10 +58,11 @@ Tests: `tests/test_splits_leakage.py`, `tests/test_preprocess_train_only.py`.
 | S4.2, focal + class-balanced surrogate | `losses/focal.py::focal_objective_factory`, `losses/cost_sensitive.py::class_balanced_weights` | `stage1.focal_gamma` | ⚠️ γ is L-20, β is L-12 |
 | Eq. 5, threshold gate | `models/stage1_triage.py::ThresholdGate` | `stage1.threshold_low/high` | ✅ corrected form, A-05 |
 | S4.8.1, per-dataset thresholds | `models/stage1_triage.py::MANUSCRIPT_THRESHOLDS` | `configs/d*.yaml` | ✅ |
-| S4.3.1, LoRA configuration | `models/stage2_rationale.py::LoRAConfig` | `stage2.*` | ⚠️ no adapter shipped |
+| S4.3.1, LoRA configuration | `models/stage2_rationale.py::Stage2Config.from_yaml`, `scripts/train_stage2_lora.py` | `configs/stage2_lora.yaml` (canonical) | ⛔ manuscript adapter NOT AVAILABLE (L-31); corpus unspecified (L-25); see `docs/STAGE2_LORA.md` |
+| S4.3.1, adapter validation / loading | `scripts/validate_stage2_adapter.py`, `models/stage2_rationale.py::RationaleModel.load` | `configs/stage2_lora.yaml` | ✅ interface; raises when no adapter is supplied |
 | S4.3.2, rationale schema | `schemas/rationale_schema.json` | — | ✅ |
 | S4.3.3, grammar-masked decoding | `models/grammar.py::RationaleGrammar` | — | ✅ own implementation, L-07 |
-| S4.3.4, training-only retrieval | `retrieval/index.py::RetrievalIndex` | `stage2.n_retrieved_examples` | ✅ |
+| S4.3.4, training-only retrieval | `retrieval/index.py::RetrievalIndex`, `scripts/build_retrieval_index.py` | `retrieval/config/retrieval.yaml` | ✅ exact search (L-33); encoder revision unpinned (L-29); see `docs/RETRIEVAL_SETUP.md` |
 | S4.3.5, failure handling | `models/stage2_rationale.py::finalise_generation` | — | ✅ |
 | Eq. 6–7, verifier | `verifier/engine.py::DeterministicVerifier` | `verifier/rules/claim_primitives.yaml` | ✅ |
 | S4.4, five claim primitives | `verifier/primitives.py` | same rule file | ✅ |
@@ -71,8 +72,8 @@ Tests: `tests/test_splits_leakage.py`, `tests/test_preprocess_train_only.py`.
 | S4.5, split-conformal | `models/stage4_calibration.py::SplitConformalCalibrator` | `stage4.conformal_alpha` | ✅ |
 | S4.5, verifier-aware variant | same class, `verifier_penalty` | `stage4.verifier_penalty` | ⚠️ magnitude is L-16 |
 | S4.6.1, cost-sensitive loss | `losses/cost_sensitive.py` | `configs/costs.yaml` | ⛔ costs missing, A-10 |
-| S4.6.2, adversarial training | `adversarial/edits.py` | `objectives.adversarial_*` | ⚠️ injection family blocked, A-06 |
-| S4.6.3, counterfactual loss | `losses/counterfactual.py` | `objectives.counterfactual_weight` | ✅ |
+| S4.6.2, adversarial training | `adversarial/edits.py` (edit functions) | `objectives.adversarial_*`, `adversarial/families/edit_families.yaml` | ⚠️ training-time selection loop not wired into `scripts/train.py` (L-34); injection family blocked, A-06 |
+| S4.6.3, counterfactual loss | `losses/counterfactual.py`, `scripts/train_stage2_lora.py::build_counterfactual` | `objectives.counterfactual_weight` | ⚠️ target reconstruction rule is L-32 |
 | S4.6.4, ±50% λ sensitivity | `configs/ablations.yaml` `A8` | — | ⚠️ requires Stage 2 |
 | S4.7, nine baselines | `baselines/registry.py`, `baselines/neural.py` | `configs/baselines.yaml` | ⚠️ hyperparameters are L-18 |
 | S4.8.2, latency protocol | `evaluation/latency.py::measure_pathway` | — | ⚠️ escalation path blocked, A-17 |
@@ -153,8 +154,8 @@ construction rather than a reproduction.
 
 | Field | Value |
 |---|---|
-| Code | `evaluation/temporal.py::expanding_window_summary`, `late_fold_degradation` |
-| Blocker | initial window size (L-03) |
+| Code | `evaluation/temporal.py::expanding_window_summary`, `late_fold_degradation`; folds from `data/splits.py::expanding_window_folds(cut_quantiles=MANUSCRIPT_D3_CUT_QUANTILES)` |
+| Blocker | fold definition resolved by revised Table 8(d); the per-fold training driver is not wired into `scripts/robustness.py`, and the full-model rows need Stage 2 (L-25, L-31) |
 
 ### Table 9(c) — D4 shock ⚠️
 

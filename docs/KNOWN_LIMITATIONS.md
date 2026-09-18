@@ -36,6 +36,20 @@ package. Consequences: ablations A1, A3 and A6 cannot be run; every reported
 verifier-safeguard rate is unreproducible; and `scripts/train.py` trains what is
 effectively the A6 ("w/o Large LLM") configuration.
 
+*Status after the reviewer reproducibility update (2026-09):* **still open.**
+The accessible project materials were searched for an execution record. The
+only related document is a pre-implementation design specification that
+*planned* a teacher-model-generated corpus with a human-adjudicated subset; it
+predates the experiments, disagrees with the manuscript on other Stage 2
+settings (five retrieved examples and an approximate index versus the
+manuscript's four and cosine search; five seeds versus ten), and carries no
+teacher-model revision, prompt, decoding settings, filtering log, adjudication
+protocol or corpus file. It is not treated as evidence of what was done. The
+corpus **format**, loader, S4.3.1 filters, counterfactual generator and training
+script are now shipped (`docs/STAGE2_LORA.md`), so an authors' corpus can be
+used without code changes. The adapter itself is separately absent (L-31 and
+`artifacts/lora/README.md`).
+
 ### L-26 — no operational cost values
 **REQUIRES AUTHOR CONFIRMATION.** See audit finding A-10. The false-negative
 fraud cost, false-positive review cost and true-positive review cost appear only
@@ -59,9 +73,18 @@ chronological tail of the training period is used, matching D1's stated rule.
 Default: 10%.
 
 ### L-03 — D3 expanding-window initial window size
-**DOCUMENTED DEFAULT.** Five folds are stated; the initial training window is
-not. Default: 40% of the ordered sample. This directly affects the per-fold
-values in Table 9(b).
+**DOCUMENTED DEFAULT — superseded by the revised manuscript.** The original
+submission stated five folds without the initial training window; the default
+was 40% of the ordered sample with contiguous test blocks. The revised
+manuscript's Table 8(d) now defines the folds exactly: fixed origin, cut at
+`TransactionDT` quantiles 0.60 / 0.70 / 0.80 / 0.85 / 0.90, **test-to-end**
+(every observation at or after the cut is the test partition), so Fold 3 is the
+primary Table 5(c) holdout by construction. `configs/d3.yaml
+split.cv_cut_quantiles` carries those values tagged MANUSCRIPT and
+`expanding_window_folds(cut_quantiles=...)` implements the construction; the
+legacy `cv_initial_fraction` path is retained only for comparison. What
+remains undocumented is the within-window validation carve-out (10%, the D1
+rule, L-02).
 
 ### L-04 — D4 validation timesteps
 **DOCUMENTED DEFAULT.** Timesteps 1–34 train and 35–49 test are stated; no
@@ -197,12 +220,85 @@ should not be expected even with identical seeds.
 
 ---
 
+## Added by the reviewer reproducibility update
+
+### L-29 — immutable revisions of the third-party models are not recorded
+**REQUIRES AUTHOR CONFIRMATION.** The manuscript names
+`Meta-Llama-3.1-8B-Instruct` (S4.3.1) and `all-MiniLM-L6-v2` (S4.3.4) and the
+library versions (S4.8.2) but not the Hugging Face commit of either model. Both
+repositories have received revisions since release (tokenizer and generation
+configuration changes are documented on the Llama model card), so the
+identifier alone does not fix the bytes. `configs/stage2_lora.yaml
+base_model.revision`, `base_model.tokenizer_revision` and
+`retrieval/config/retrieval.yaml encoder.revision` are therefore `null`; the
+training and index-building scripts accept `--base-model-revision` /
+`--encoder-revision`, and record `"unpinned"` when none is given, so the gap
+is visible in every run record.
+
+### L-30 — Stage 2 optimisation details the manuscript omits
+**DOCUMENTED DEFAULT / REQUIRES AUTHOR CONFIRMATION.** Stated: AdamW, learning
+rate 2e-4, weight decay 0.01, linear warm-up over the first 5% of steps, three
+epochs, bfloat16, effective batch size 32 by gradient accumulation, checkpoint
+by validation loss (S4.3.1, S4.8.1). Not stated: per-device batch size and
+accumulation steps (only their product); the learning-rate schedule after
+warm-up; gradient clipping for Stage 2 (1.0 is stated for Stage 0 only); AdamW
+betas and epsilon; LoRA bias policy and `modules_to_save`; whether one adapter
+was trained per seed or shared across seeds. `scripts/train_stage2_lora.py`
+refuses to run without `--per-device-batch-size`, uses `transformers`' linear
+schedule (warm-up then linear decay) and `bias="none"`, and records every one
+of these choices in the run record.
+
+### L-31 — Stage 2 adapter save format, and the adapter's absence
+**DOCUMENTED DEFAULT** for the format: the manuscript does not state one;
+safetensors (the PEFT default) is used and checked by
+`scripts/validate_stage2_adapter.py`. **NOT AVAILABLE** for the artefact: the
+adapter trained for the manuscript is not present in the working tree, the full
+git history, any branch or tag, Git LFS, or the maintainers' project
+directories. Exact reproduction of every Stage 2-dependent number is blocked by
+this independently of L-25. Full statement: `artifacts/lora/README.md`.
+
+### L-32 — counterfactual target construction
+**DOCUMENTED DEFAULT.** S4.6.3 says that after one admissible evidence element
+is modified, "claims directly affected by the change are updated or removed,
+whereas claims supported by unchanged evidence retain their original structured
+form", and that the rationale-side probability is "regularised", without giving
+the rule or the functional form of the loss. `scripts/train_stage2_lora.py`
+re-verifies the original claims against the modified evidence, keeps those that
+still verify, removes those that do not, discards the pair when no claim
+survives or the verdict is no longer supported, and applies the counterfactual
+example as an additional supervised example with loss weight 0.25 (the stated
+weight). The probability-stability penalty
+(`losses/counterfactual.py::rationale_stability_penalty`) is available as a
+reported metric but is not back-propagated, because doing so requires decoding
+inside the training loop and the manuscript does not describe that.
+
+### L-33 — retrieval index type and tie-breaking
+**DOCUMENTED DEFAULT.** S4.3.4 states FAISS with cosine similarity but no index
+type. Exact search (numpy inner product over L2-normalised vectors, equivalent
+to `IndexFlatIP`) is used; an approximate index would make the retrieved
+demonstrations depend on index-construction randomness. Ties are broken by
+insertion order (stable sort). See `docs/RETRIEVAL_SETUP.md` §1.
+
+### L-34 — adversarial training loop is not wired into Stage 1 training
+**IMPLEMENTATION GAP (this package, not the manuscript).** S4.6.2 describes
+training-time adversarial augmentation (budget 2, 25% of fraudulent examples
+per epoch, keep the max-loss valid candidate, weight 0.50). The edit functions
+and the configuration exist (`docs/EDIT_GENERATORS.md`), but `scripts/train.py`
+does not run the selection loop, so the Stage 1 model it produces corresponds
+to ablation A4 ("w/o adversarial training") rather than the full model. This is
+stated so that no number from `scripts/train.py` is compared against a
+full-model row without that caveat.
+
+---
+
 ## Summary
 
 | Category | Count | Effect |
 |---|---|---|
-| REQUIRES AUTHOR CONFIRMATION | 7 (L-01, L-18, L-24, L-25, L-26, L-27, and A-* findings) | Blocks reproduction of specific tables |
-| DOCUMENTED DEFAULT | 21 | Changes numbers; does not block execution |
+| REQUIRES AUTHOR CONFIRMATION | 8 (L-01, L-18, L-24, L-25, L-26, L-27, L-29, L-30 in part, and A-* findings) | Blocks reproduction of specific tables |
+| DOCUMENTED DEFAULT | 24 (incl. L-31 format, L-32, L-33) | Changes numbers; does not block execution |
+| NOT AVAILABLE | 1 (L-31: the Stage 2 adapter) | Blocks every Stage 2-dependent number |
+| IMPLEMENTATION GAP | 1 (L-34) | `scripts/train.py` produces the A4 configuration of Stage 1 |
 
 The practical consequence: **Tables 5, 6, 7, 8, 9(b), 10 and Supplementary
 S1–S4 cannot be reproduced from the manuscript as published.** Tables 9(a) and

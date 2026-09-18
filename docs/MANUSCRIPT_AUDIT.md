@@ -412,3 +412,79 @@ than measured, or "reject" means something other than "declined as fraud".
 | A-14 | `--alignment` mandatory; `ManuscriptInconsistencyError` otherwise |
 | A-16 | Reference partition mandatory and recorded |
 | A-17 | Plausibility check emitted with every latency measurement |
+
+---
+
+## Revision reconciliation — revised manuscript (2026-09)
+
+The findings above were raised against the original submission. The revised
+manuscript supplied with the reviewer reproducibility request changes the
+status of several of them. Nothing above has been deleted or rewritten; this
+section records, per finding, what the revision did. "Resolved" means the
+inconsistency no longer exists in the revised text; "withdrawn" means the
+affected result was removed rather than corrected; "open" means the revised
+text still contains the problem.
+
+| Finding | Status in the revised manuscript | Evidence |
+|---|---|---|
+| A-01 Recall@top-1% ceiling on D3 | **open** | Table 5(c) still reports values above 0.2857 for every model |
+| A-02 Table 6 mean deltas | **resolved** | Table 6 now reports the values implied by Table 5 (+24.68, +27.73, +16.28, +14.55, +12.38, +10.90, +7.31, +6.05, +3.81 pp); `scripts/audit_manuscript.py --revision revised` passes this check |
+| A-03 DeLong seed policy | **withdrawn** | S4.8.3: the DeLong statistics are "not retained in the revised analysis" because the underlying prediction vectors were not unambiguously preserved — which also confirms that per-transaction predictions are not available (ARTIFACT_AVAILABILITY.md) |
+| A-04 pooling across datasets | **partly addressed** | the revised text repeatedly states the 30 pairs are not independent and the pooled test is a "secondary sensitivity analysis"; per-dataset tests are still not reported |
+| A-05 Equation 5 malformed | **open** | the revised Eq. 5 still reads `D_i = reject, P_t < T_high` and `T_low ≤ P_t ≧ T_high` |
+| A-06 injection against text-free models | **partly resolved** | the injection column is removed from the predictive-path tables (now Tables 9(a–c), four families) and S4.6.2 states why; the rationale-pathway injection evaluation (S5.7, Supplementary S4) still presupposes an untrusted text field that no benchmark has |
+| A-07 splitting on D1 | **open** | unchanged |
+| A-08 / A-09 feature counts | **open** | Table 2 unchanged ("30 features", "109 features") |
+| A-10 cost values | **open** | still only in Supplementary S1 |
+| A-11 learning-rate typesetting | **open** | S4.3.1 still prints "2 x10^4" |
+| A-12 effect size unnamed | **open** | Table 6 column still headed "Effect size Δ" |
+| A-13 meaning of B > 1 per family | **open** | unchanged |
+| A-14 transfer without alignment | **withdrawn** | S5.4: "the previously reported full cross-dataset transfer matrices are not retained" |
+| A-15 D5 label is default, not fraud | **moot** | transfer results withdrawn |
+| A-16 D1 drift reference | **open** | the D1 drift table (captioned "Table 9(a)", referred to as Table 8(a)) still heads its reference column "Train AUPRC" with the value Table 5(a) reports as the held-out test AUPRC |
+| A-17 escalation latency | **open** | S4.8.2 now gives hardware and timing protocol (batch 1, warm-up, 10 000 timed transactions, GPU synchronisation) but the same p99, and still no generated-token count or serving stack; the bandwidth argument is unchanged |
+| A-18 A6 ambiguity | **open** | unchanged |
+| A-19 TabTransformer D2 across tables | **moot** | Table 8(c) transfer diagonal withdrawn |
+| A-20 Figure 1 bounds | **resolved** | Figure 1 panel (b) now states "Only the split-conformal component carries a formal coverage statement" |
+| A-21 Figure 2 proportions | **open** | unchanged |
+
+### New findings in the revised manuscript
+
+**A-22 — Table numbering is inconsistent — MINOR.** The D1 drift table is
+captioned "Table 9(a)" while the surrounding text calls it Table 8(a) and the
+evasion tables are captioned 9(a–c); S4.6.2 and S5.6 refer to "Tables 10(a–c)"
+for evasion; S4.8.3 refers to "Table 9(b)" for the expanding-window analysis
+that is captioned 8(b). A reader cannot cite these tables unambiguously.
+
+**A-23 — An editorial note was left in the text — MINOR.** S4.8.2 ends with
+"The paper already reports these two p99 values but does not currently provide
+the associated hardware and measurement protocol." — a revision note that
+contradicts the paragraph it closes, which does provide them.
+
+**A-24 — The evasion tables do not name their dataset — MAJOR.** Tables 9(a–c)
+report split, delay, mule and feat columns for LightGBM, TabTransformer, two
+ablations and the full model without stating which dataset(s) the attacks were
+run on. Under S4.6.2's own validity conditions (splitting needs a payment
+amount; mule routing needs an entity graph) the only benchmark on which both
+`split` and `mule` are defined is D2 (see `docs/EDIT_GENERATORS.md`,
+applicability matrix). Either the tables are D2-only and should say so, or a
+dataset on which one of the two families is undefined contributed to a column,
+which would make that column undefined.
+
+**A-25 — Table 8(d) fold arithmetic is consistent — PASS.** The nominal
+train/test counts (354,324 / 236,216; 413,378 / 177,162; 472,432 / 118,108;
+501,959 / 88,581; 531,486 / 59,054) equal 590,540 × the stated quantiles to
+rounding. This is recorded because it resolves L-03 and is implemented in
+`configs/d3.yaml split.cv_cut_quantiles`.
+
+**A-26 — S4.3.4 retrieval description is internally consistent with the
+implementation — PASS.** Training-only, strictly-earlier, identifier
+exclusions, four examples, omission when none is eligible: each maps to an
+enforced rule and a test (`docs/RETRIEVAL_SETUP.md`).
+
+### Effect on the audit script
+
+`python scripts/audit_manuscript.py` keeps evaluating the original submission
+by default. `python scripts/audit_manuscript.py --revision revised` evaluates
+the revised manuscript: A-02 passes, A-19 is reported as not applicable, and
+A-01, A-08/A-09, A-16 and A-17 still fail.

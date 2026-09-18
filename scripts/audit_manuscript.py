@@ -2,8 +2,14 @@
 
 Usage
 -----
-    python scripts/audit_manuscript.py
+    python scripts/audit_manuscript.py                       # original submission
+    python scripts/audit_manuscript.py --revision revised    # revised manuscript (2026-09)
     python scripts/audit_manuscript.py --json
+
+``--revision`` selects which manuscript version's numbers are audited. The
+revised manuscript corrected Table 6 (A-02) and withdrew the transfer matrix
+(A-19 becomes not applicable); the other checks are unchanged between versions.
+See docs/MANUSCRIPT_AUDIT.md, "Revision reconciliation".
 
 This script contains manuscript-reported values **as audit inputs only**. They
 are never used to produce a result, a metric, or a table; they exist so that a
@@ -52,10 +58,19 @@ TABLE_5_AUPRC = {
            "lightgbm": 0.7087, "tabtransformer": 0.7234, "vr_fraudnet": 0.7456},
 }
 TABLE_6A_MEAN_DELTA_PP = {
-    "logistic_regression": 20.18, "isolation_forest": 22.45, "mlp": 12.18,
-    "cnn1d": 10.78, "lstm": 9.04, "random_forest": 8.32, "xgboost": 5.45,
-    "lightgbm": 4.94, "tabtransformer": 3.65,
+    "original": {
+        "logistic_regression": 20.18, "isolation_forest": 22.45, "mlp": 12.18,
+        "cnn1d": 10.78, "lstm": 9.04, "random_forest": 8.32, "xgboost": 5.45,
+        "lightgbm": 4.94, "tabtransformer": 3.65,
+    },
+    # Revised manuscript, Table 6 ("Pooled repeated-training Wilcoxon sensitivity analysis").
+    "revised": {
+        "logistic_regression": 24.68, "isolation_forest": 27.73, "mlp": 16.28,
+        "cnn1d": 14.55, "lstm": 12.38, "random_forest": 10.90, "xgboost": 7.31,
+        "lightgbm": 6.05, "tabtransformer": 3.81,
+    },
 }
+REVISION = "original"  # set by main(); read by the checks that differ between versions
 TABLE_5C_RECALL_TOP1 = {"logistic_regression": 0.4567, "isolation_forest": 0.4234,
                         "vr_fraudnet": 0.6234, "tabtransformer": 0.6034}
 TABLE_8C_TABTRANSFORMER_DIAGONAL = {"D1": 0.5012, "D2": 0.5187, "D3": 0.7234}
@@ -85,7 +100,7 @@ def check_a01() -> Check:
 def check_a02() -> Check:
     """Table 6(a) mean AUPRC deltas vs the means implied by Table 5."""
     mismatches = {}
-    for baseline, reported in TABLE_6A_MEAN_DELTA_PP.items():
+    for baseline, reported in TABLE_6A_MEAN_DELTA_PP[REVISION].items():
         implied = sum(
             (TABLE_5_AUPRC[d]["vr_fraudnet"] - TABLE_5_AUPRC[d][baseline]) * 100.0
             for d in ("D1", "D2", "D3")
@@ -97,8 +112,13 @@ def check_a02() -> Check:
         "Table 6(a) mean deltas vs Table 5",
         passed=not mismatches,
         detail=(
-            "Mean paired AUPRC difference implied by Table 5 does not match the value "
-            f"printed in Table 6(a) for: {json.dumps(mismatches, indent=2)}"
+            f"[{REVISION} manuscript] "
+            + (
+                "Table 6 mean deltas equal the values implied by Table 5 for every baseline."
+                if not mismatches
+                else "Mean paired AUPRC difference implied by Table 5 does not match the value "
+                f"printed in Table 6(a) for: {json.dumps(mismatches, indent=2)}"
+            )
         ),
     )
 
@@ -181,6 +201,16 @@ def check_a17() -> Check:
 
 def check_a19() -> Check:
     """TabTransformer D2 diagonal in Table 8(c) vs its Table 5(b) value."""
+    if REVISION == "revised":
+        return Check(
+            "A-19",
+            "TabTransformer D2 in-domain AUPRC across tables",
+            passed=True,
+            detail=(
+                "[revised manuscript] not applicable: the cross-dataset transfer matrix "
+                "(original Table 8) was withdrawn in S5.4, so there is no diagonal to compare."
+            ),
+        )
     table5 = TABLE_5_AUPRC["D2"]["tabtransformer"]
     table8 = TABLE_8C_TABTRANSFORMER_DIAGONAL["D2"]
     return Check(
@@ -202,12 +232,18 @@ CHECKS = [check_a01, check_a02, check_a04, check_a08_a09, check_a16, check_a17, 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="emit machine-readable output")
+    parser.add_argument("--revision", choices=("original", "revised"), default="original",
+                        help="which manuscript version to audit (default: original submission)")
     args = parser.parse_args()
+
+    global REVISION
+    REVISION = args.revision
 
     results = [check() for check in CHECKS]
     if args.json:
         print(json.dumps([asdict(r) for r in results], indent=2))
     else:
+        print(f"Manuscript version audited: {REVISION}\n")
         for result in results:
             status = "PASS" if result.passed else "FAIL"
             print(f"[{status}] {result.finding}  {result.title}")
