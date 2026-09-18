@@ -1,0 +1,168 @@
+# Canonical Stage 2 (schema-constrained rationale language model) configuration.
+#
+# This is the single source for every Stage 2 / LoRA setting. The ``stage2``
+# block in configs/base.yaml mirrors the subset the pipeline reads at inference
+# time and is checked against this file by
+# tests/test_reviewer_artifacts.py::test_base_config_stage2_block_matches_canonical.
+#
+# Provenance vocabulary is the same as configs/base.yaml:
+#   MANUSCRIPT  - stated in the paper (section cited)
+#   ASSUMPTION  - not stated; a documented default (docs/KNOWN_LIMITATIONS.md id)
+#   DERIVED     - implied by other manuscript statements
+# A value of ``null`` means the paper is silent AND no project artefact records
+# the value. The training script refuses to fill such a value in silently; the
+# operator must pass it explicitly and it is recorded in the run manifest.
+#
+# Nothing in this file is a trained weight. See artifacts/lora/README.md for the
+# adapter-availability statement.
+
+schema_version: vrfraudnet-stage2/1
+source: "manuscript Sections 4.3.1, 4.3.3, 4.3.4, 4.6.3, 4.8.1, 4.8.2"
+
+base_model:
+  repository: meta-llama/Meta-Llama-3.1-8B-Instruct   # MANUSCRIPT S4.3.1, Table 3
+  revision: null                                       # not recorded anywhere (L-29)
+  tokenizer: meta-llama/Meta-Llama-3.1-8B-Instruct     # DERIVED (same repository as the base model)
+  tokenizer_revision: null                             # not recorded anywhere (L-29)
+  licence: "Llama 3.1 Community License; weights are NOT redistributed here"
+  access: "gated on the Hugging Face Hub; accept the licence and authenticate outside this repository"
+
+peft:
+  implementation: peft                 # MANUSCRIPT S4.8.2 (PEFT 0.10.0)
+  implementation_version: "0.10.0"     # MANUSCRIPT S4.8.2
+  transformers_version: "4.40.1"       # MANUSCRIPT S4.8.2
+  torch_version: "2.2.1"               # MANUSCRIPT S4.8.2
+  method: lora
+  r: 16                                # MANUSCRIPT S4.3.1 (rank 16)
+  lora_alpha: 32                       # MANUSCRIPT S4.3.1 (scaling factor 32)
+  lora_dropout: 0.05                   # MANUSCRIPT S4.3.1
+  target_modules: [q_proj, k_proj, v_proj, o_proj]   # MANUSCRIPT S4.3.1 (query, key, value, output projections)
+  modules_to_save: null                # none stated (L-30)
+  bias: none                           # ASSUMPTION L-30
+  task_type: CAUSAL_LM                 # DERIVED (autoregressive JSON generation)
+  base_weights_frozen: true            # MANUSCRIPT S4.3.1
+
+precision:
+  dtype: bfloat16                      # MANUSCRIPT S4.3.1, S4.8.2
+  quantization: none                   # DERIVED: no quantisation is described anywhere in the manuscript
+
+sequence:
+  max_input_tokens: 1024               # MANUSCRIPT S4.3.1
+  max_output_tokens: 384               # MANUSCRIPT S4.3.1, S4.3.3
+  max_claims_per_rationale: 8          # MANUSCRIPT S4.3.2 (enforced by schemas/rationale_schema.json)
+
+optimisation:
+  optimizer: adamw                     # MANUSCRIPT S4.3.1
+  learning_rate: 0.0002                # MANUSCRIPT S4.8.1 (S4.3.1 typesets it as 2 x10^4; audit note A-11)
+  weight_decay: 0.01                   # MANUSCRIPT S4.3.1
+  scheduler: linear_warmup             # MANUSCRIPT S4.3.1 (linear warm-up covering the first 5% of optimisation steps)
+  warmup_ratio: 0.05                   # MANUSCRIPT S4.3.1
+  post_warmup_decay: null              # decay after warm-up is not stated (L-30)
+  epochs: 3                            # MANUSCRIPT S4.3.1, S4.8.1
+  max_steps: null                      # DERIVED: epoch-bounded, no step cap stated
+  effective_batch_size: 32             # MANUSCRIPT S4.3.1 (effective batch size of 32 through gradient accumulation)
+  per_device_batch_size: null          # only the effective size is stated (L-30)
+  gradient_accumulation_steps: null    # derived at runtime from the two sizes (L-30)
+  gradient_clip_norm: null             # stated for Stage 0 (1.0), not for Stage 2 (L-30)
+  adamw_betas: null                    # not stated (L-30)
+  adamw_epsilon: null                  # not stated (L-30)
+
+objective:
+  primary: schema_constrained_next_token   # MANUSCRIPT S4.3.1
+  counterfactual_weight: 0.25              # MANUSCRIPT S4.6.3, S4.6.4
+  counterfactual_candidates: [0.25, 0.50, 0.75, 1.00]   # MANUSCRIPT S4.6.3
+  counterfactual_selection: "validation AUPRC primary; verifier acceptance and schema validity secondary"  # MANUSCRIPT S4.6.3
+  counterfactual_implementation: src/vrfraudnet/losses/counterfactual.py
+
+checkpoint_selection:
+  primary: validation_loss                       # MANUSCRIPT S4.3.1, S4.8.1
+  secondary: [schema_valid_generation_rate, verifier_acceptance_rate]   # MANUSCRIPT S4.3.1
+  evaluated_on: "evidence-supported validation examples"                 # MANUSCRIPT S4.3.1
+
+seeds:
+  policy: manuscript_seed_set          # MANUSCRIPT S4.8.1 (same ten seeds for every stochastic component)
+  file: configs/manuscript_seeds.yaml
+  per_seed_adapters: null              # one adapter per seed, or one shared adapter, is not stated (L-30)
+
+training_data:
+  partition: train                     # MANUSCRIPT S4.3.1 (only review-band transactions from the training partition)
+  subset: review_band                  # MANUSCRIPT S4.3.1
+  review_band_definition: "T_low <= P_t <= T_high from the Stage 1 gate (S4.2, S4.8.1)"   # MANUSCRIPT
+  excluded_partitions: [validation, test, temporal_shock, strict_inductive, adversarial]   # MANUSCRIPT S4.3.1
+  target_filtering: "targets that are malformed, internally inconsistent, or rejected by the deterministic verifier are excluded"   # MANUSCRIPT S4.3.1
+  target_filter_implementation: src/vrfraudnet/models/stage2_rationale.py::filter_training_targets
+  target_construction: null            # rule / teacher-model / human authorship is not stated (L-25)
+  corpus_format: docs/STAGE2_LORA.md
+  corpus_example: examples/stage2_corpus_example.jsonl   # SYNTHETIC, two records, format illustration only
+  corpus_path: null                    # supplied by the operator; no corpus is shipped
+
+serialisation:
+  prompt_builder: src/vrfraudnet/models/stage2_rationale.py::build_prompt   # order: schema hint, current evidence, triage probability, timestamp, retrieved demonstrations (S4.3, S4.3.4)
+  target_format: "one JSON object conforming to schemas/rationale_schema.json, keys in grammar order"
+  key_order: [verdict, rationale_probability, claims, evidence_references]   # ASSUMPTION L-15
+  n_retrieved_examples: 4              # MANUSCRIPT S4.3.4
+  retrieval_config: retrieval/config/retrieval.yaml
+
+decoding:
+  strategy: greedy                     # MANUSCRIPT S4.3.3
+  temperature: 0.0                     # MANUSCRIPT S4.3.3
+  do_sample: false                     # MANUSCRIPT S4.3.3
+  num_beams: 1                         # DERIVED from deterministic greedy decoding
+  grammar_masked: true                 # MANUSCRIPT S4.3.3
+  grammar_implementation: src/vrfraudnet/models/grammar.py
+  schema: schemas/rationale_schema.json
+  stop_condition: "complete JSON object, or the 384-token output limit"   # MANUSCRIPT S4.3.3
+  incomplete_output_handling: verification_failure                        # MANUSCRIPT S4.3.3, S4.3.5
+
+adapter:
+  save_format: safetensors             # ASSUMPTION L-31 (PEFT default; the manuscript does not state a format)
+  required_files: [adapter_config.json, adapter_model.safetensors]
+  authentic_manuscript_adapter: NOT_AVAILABLE   # see artifacts/lora/README.md
+  validation_script: scripts/validate_stage2_adapter.py
+  training_script: scripts/train_stage2_lora.py
+
+hardware_reference:                    # MANUSCRIPT S4.8.2
+  gpu: "1 x NVIDIA A100 80GB"
+  cpu: "AMD EPYC 7543 32-core"
+  ram_gb: 256
+  cuda: "12.1"
+  cudnn: "8.9"
+  os: "Ubuntu 22.04 LTS"
+  python: "3.11.7"
+
+_provenance:
+  base_model.repository: {tag: MANUSCRIPT, source: "S4.3.1, Table 3"}
+  base_model.revision: {tag: ASSUMPTION, limitation: "L-29"}
+  base_model.tokenizer_revision: {tag: ASSUMPTION, limitation: "L-29"}
+  peft.r: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  peft.lora_alpha: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  peft.lora_dropout: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  peft.target_modules: {tag: MANUSCRIPT, source: "S4.3.1"}
+  peft.bias: {tag: ASSUMPTION, limitation: "L-30"}
+  peft.modules_to_save: {tag: ASSUMPTION, limitation: "L-30"}
+  peft.task_type: {tag: DERIVED, source: "S4.3 (autoregressive generation of a JSON object)"}
+  precision.dtype: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.2"}
+  precision.quantization: {tag: DERIVED, source: "no quantisation is described in S4.3 or S4.8.2"}
+  sequence.max_input_tokens: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  sequence.max_output_tokens: {tag: MANUSCRIPT, source: "S4.3.1, S4.3.3, S4.8.1"}
+  optimisation.optimizer: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  optimisation.learning_rate: {tag: MANUSCRIPT, source: "S4.8.1; audit note A-11"}
+  optimisation.weight_decay: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  optimisation.warmup_ratio: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  optimisation.post_warmup_decay: {tag: ASSUMPTION, limitation: "L-30"}
+  optimisation.epochs: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  optimisation.effective_batch_size: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  optimisation.per_device_batch_size: {tag: ASSUMPTION, limitation: "L-30"}
+  optimisation.gradient_accumulation_steps: {tag: ASSUMPTION, limitation: "L-30"}
+  optimisation.gradient_clip_norm: {tag: ASSUMPTION, limitation: "L-30"}
+  optimisation.adamw_betas: {tag: ASSUMPTION, limitation: "L-30"}
+  optimisation.adamw_epsilon: {tag: ASSUMPTION, limitation: "L-30"}
+  objective.counterfactual_weight: {tag: MANUSCRIPT, source: "S4.6.3, S4.6.4"}
+  checkpoint_selection.primary: {tag: MANUSCRIPT, source: "S4.3.1, S4.8.1"}
+  seeds.per_seed_adapters: {tag: ASSUMPTION, limitation: "L-30"}
+  training_data.target_construction: {tag: ASSUMPTION, limitation: "L-25"}
+  serialisation.key_order: {tag: ASSUMPTION, limitation: "L-15"}
+  serialisation.n_retrieved_examples: {tag: MANUSCRIPT, source: "S4.3.4"}
+  decoding.strategy: {tag: MANUSCRIPT, source: "S4.3.3"}
+  decoding.temperature: {tag: MANUSCRIPT, source: "S4.3.3"}
+  adapter.save_format: {tag: ASSUMPTION, limitation: "L-31"}

@@ -1,0 +1,32 @@
+# Canonical machine-readable statement of the manuscript seed set.
+#
+# Manuscript Section 4.8.1: "Ten repeated training runs were conducted using
+# random seeds 42, 123, 456, 789, 2024, 3141, 2718, 1001, 1729, and 4096. The
+# same seeds and fixed data partitions were used for VR-FraudNet and all
+# stochastic baselines to preserve paired comparisons across training runs."
+#
+# This file and ``vrfraudnet.seeds.MANUSCRIPT_SEEDS`` MUST agree; the test
+# ``tests/test_reviewer_artifacts.py::test_seed_file_matches_code_constant``
+# fails if they drift. Do not edit one without the other. There is exactly one
+# semantic seed set in this repository.
+
+schema_version: vrfraudnet-seeds/1
+source: "manuscript Section 4.8.1"
+n_repeated_runs: 10
+seeds:
+  - 42
+  - 123
+  - 456
+  - 789
+  - 2024
+  - 3141
+  - 2718
+  - 1001
+  - 1729
+  - 4096
+interpretation: >-
+  Each seed quantifies variability arising from stochastic model optimisation
+  under FIXED data partitions. Seeds are not independent samples of the dataset
+  (manuscript Section 4.8.1, Section 4.8.3). Results obtained with any other
+  seed set are not comparable to the manuscript's mean +/- standard deviation.
+pooled_pairs_d1_d3: 30          # 10 seeds x 3 primary datasets; Wilcoxon V_max = 465

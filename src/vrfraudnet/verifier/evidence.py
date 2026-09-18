@@ -145,6 +145,35 @@ class TransactionEvidence:
             graph=graph,
         )
 
+    @classmethod
+    def from_json(cls, payload: Mapping[str, Any]) -> "TransactionEvidence":
+        """Build evidence from the JSON layout of ``examples/evidence_example.json``.
+
+        The layout is the on-disk form of a Stage 2 corpus record's ``evidence``
+        field (docs/STAGE2_LORA.md). Typed groups are mandatory for the same
+        reason as in :meth:`from_row`: nothing is inferred from a value's type.
+        """
+        graph_payload = payload.get("graph")
+        graph = None
+        if graph_payload:
+            graph = GraphEvidence(
+                adjacency={
+                    str(node): {str(n) for n in neighbours}
+                    for node, neighbours in dict(graph_payload.get("adjacency", {})).items()
+                },
+                as_of_time=float(graph_payload.get("as_of_time", payload["timestamp"])),
+                flagged_entities={str(n) for n in graph_payload.get("flagged_entities", [])},
+            )
+        return cls.from_row(
+            str(payload["transaction_id"]),
+            float(payload["timestamp"]),
+            numeric=payload.get("numeric"),
+            categorical=payload.get("categorical"),
+            entities=payload.get("entities"),
+            temporal_aggregates=payload.get("temporal_aggregates"),
+            graph=graph,
+        )
+
 
 def build_graph_evidence(
     edge_index: np.ndarray,

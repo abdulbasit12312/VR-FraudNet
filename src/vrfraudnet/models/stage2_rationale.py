@@ -19,11 +19,17 @@ Manuscript specification
 Artefact status
 ---------------
 No LoRA adapter is distributed with this repository, and none is fabricated.
-:class:`RationaleModel` loads an adapter from a path the operator supplies; if
-that path does not exist it raises :class:`~vrfraudnet.errors.MissingArtefactError`
-naming the training command. Everything that does *not* require weights - the
-prompt construction, the schema, the grammar mask, the stopping rule, the
-failure handling - is implemented and unit-tested here.
+The adapter trained for the manuscript is NOT PRESENT in the accessible project
+materials (see ``artifacts/lora/README.md``). :class:`RationaleModel` loads an
+adapter from a path the operator supplies; if that path does not exist it
+raises :class:`~vrfraudnet.errors.MissingArtefactError` naming the training
+command. Everything that does *not* require weights - the prompt construction,
+the schema, the grammar mask, the stopping rule, the failure handling - is
+implemented and unit-tested here.
+
+The canonical Stage 2 configuration is ``configs/stage2_lora.yaml``;
+:meth:`Stage2Config.from_yaml` loads it. The dataclass defaults below mirror
+that file and are checked against it by the test suite.
 
 The manuscript's Section 4.3.1 states the learning rate twice, once as
 "2 x 10^4" (Section 4.3.1) and once as "0.0002" (Section 4.8.1). The former is
@@ -38,8 +44,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Sequence
 
-from vrfraudnet.errors import MissingArtefactError
+from vrfraudnet.errors import ConfigurationError, MissingArtefactError
 from vrfraudnet.models.grammar import GrammarSpec, ParseState, RationaleGrammar
+
+#: The canonical Stage 2 configuration file, relative to the repository root.
+CANONICAL_STAGE2_CONFIG = Path(__file__).resolve().parents[3] / "configs" / "stage2_lora.yaml"
 
 
 @dataclass(frozen=True)
@@ -50,13 +59,34 @@ class LoRAConfig:
     alpha: int = 32
     dropout: float = 0.05
     target_modules: tuple[str, ...] = ("q_proj", "k_proj", "v_proj", "o_proj")
+    bias: str = "none"            # ASSUMPTION L-30
+    task_type: str = "CAUSAL_LM"  # DERIVED
+
+    def to_peft_kwargs(self) -> dict[str, Any]:
+        """Keyword arguments for :class:`peft.LoraConfig`."""
+        return {
+            "r": self.rank,
+            "lora_alpha": self.alpha,
+            "lora_dropout": self.dropout,
+            "target_modules": list(self.target_modules),
+            "bias": self.bias,
+            "task_type": self.task_type,
+        }
 
 
 @dataclass(frozen=True)
 class Stage2Config:
-    """Stage 2 training and decoding configuration."""
+    """Stage 2 training and decoding configuration.
+
+    ``base_model_revision`` is the immutable Hugging Face commit of the base
+    weights. The manuscript does not record one (docs/KNOWN_LIMITATIONS.md
+    L-29), so the default is ``None``; every run manifest records whatever the
+    operator supplied, and ``None`` is written as ``"unpinned"`` so the gap is
+    visible rather than silent.
+    """
 
     base_model: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+    base_model_revision: str | None = None
     lora: LoRAConfig = field(default_factory=LoRAConfig)
     epochs: int = 3
     learning_rate: float = 2e-4
@@ -69,6 +99,51 @@ class Stage2Config:
     temperature: float = 0.0
     do_sample: bool = False
     n_retrieved_examples: int = 4  # MANUSCRIPT S4.3.4
+    counterfactual_weight: float = 0.25  # MANUSCRIPT S4.6.3
+
+    @classmethod
+    def from_yaml(cls, path: str | Path = CANONICAL_STAGE2_CONFIG) -> "Stage2Config":
+        """Load the canonical ``configs/stage2_lora.yaml``."""
+        import yaml
+
+        path = Path(path)
+        if not path.exists():
+            raise ConfigurationError(f"Stage 2 configuration not found: {path}")
+        with path.open("r", encoding="utf-8") as handle:
+            raw = yaml.safe_load(handle)
+        if raw.get("schema_version") != "vrfraudnet-stage2/1":
+            raise ConfigurationError(
+                f"{path} has schema_version {raw.get('schema_version')!r}; "
+                "expected 'vrfraudnet-stage2/1'"
+            )
+        peft = raw["peft"]
+        return cls(
+            base_model=str(raw["base_model"]["repository"]),
+            base_model_revision=raw["base_model"].get("revision"),
+            lora=LoRAConfig(
+                rank=int(peft["r"]),
+                alpha=int(peft["lora_alpha"]),
+                dropout=float(peft["lora_dropout"]),
+                target_modules=tuple(peft["target_modules"]),
+                bias=str(peft.get("bias", "none")),
+                task_type=str(peft.get("task_type", "CAUSAL_LM")),
+            ),
+            epochs=int(raw["optimisation"]["epochs"]),
+            learning_rate=float(raw["optimisation"]["learning_rate"]),
+            weight_decay=float(raw["optimisation"]["weight_decay"]),
+            warmup_ratio=float(raw["optimisation"]["warmup_ratio"]),
+            max_input_tokens=int(raw["sequence"]["max_input_tokens"]),
+            max_output_tokens=int(raw["sequence"]["max_output_tokens"]),
+            effective_batch_size=int(raw["optimisation"]["effective_batch_size"]),
+            precision=str(raw["precision"]["dtype"]),
+            temperature=float(raw["decoding"]["temperature"]),
+            do_sample=bool(raw["decoding"]["do_sample"]),
+            n_retrieved_examples=int(raw["serialisation"]["n_retrieved_examples"]),
+            counterfactual_weight=float(raw["objective"]["counterfactual_weight"]),
+        )
+
+    def revision_label(self) -> str:
+        return self.base_model_revision or "unpinned"
 
 
 @dataclass
@@ -165,10 +240,20 @@ class RationaleModel:
                 "no Stage 2 LoRA adapter available at "
                 f"{self.adapter_path!r}.\n"
                 "This repository does not distribute model weights and will not "
-                "fabricate them. Train an adapter with:\n"
-                "    python scripts/train.py --dataset D1 --config configs/d1.yaml "
-                "--seed 42 --stage stage2\n"
-                "or point --adapter at an adapter you trained yourself."
+                "fabricate them. The adapter trained for the manuscript is not present "
+                "in the accessible project materials (artifacts/lora/README.md). "
+                "Train an adapter with:\n"
+                "    python scripts/train_stage2_lora.py --dataset D1 --config configs/d1.yaml "
+                "--stage2-config configs/stage2_lora.yaml --corpus <corpus.jsonl> --seed 42\n"
+                "or point --adapter at an adapter you trained yourself, and validate it with:\n"
+                "    python scripts/validate_stage2_adapter.py --adapter <path> "
+                "--config configs/stage2_lora.yaml"
+            )
+        problems = check_adapter_metadata(self.adapter_path, self.config)
+        if problems:
+            raise ConfigurationError(
+                f"adapter at {self.adapter_path} does not match configs/stage2_lora.yaml:\n  "
+                + "\n  ".join(problems)
             )
         try:
             from peft import PeftModel
@@ -179,9 +264,10 @@ class RationaleModel:
                 "    pip install -r requirements-optional.txt"
             ) from exc
 
-        self._tokenizer = AutoTokenizer.from_pretrained(self.config.base_model)
+        revision = self.config.base_model_revision
+        self._tokenizer = AutoTokenizer.from_pretrained(self.config.base_model, revision=revision)
         base = AutoModelForCausalLM.from_pretrained(
-            self.config.base_model, torch_dtype=self.config.precision
+            self.config.base_model, torch_dtype=self.config.precision, revision=revision
         )
         self._model = PeftModel.from_pretrained(base, str(self.adapter_path))
         self._model.eval()
@@ -293,3 +379,68 @@ def filter_training_targets(
         if verifier.verify(target, evidence).accepted:
             kept.append(target)
     return kept
+
+
+# ---------------------------------------------------------------------------
+# Adapter metadata checks (no weights are read; see scripts/validate_stage2_adapter.py)
+# ---------------------------------------------------------------------------
+
+ADAPTER_CONFIG_FILE = "adapter_config.json"
+ADAPTER_WEIGHT_FILES = ("adapter_model.safetensors", "adapter_model.bin")
+
+
+def check_adapter_metadata(adapter_dir: str | Path, config: Stage2Config) -> list[str]:
+    """Compare a PEFT adapter directory against the canonical Stage 2 config.
+
+    Returns a list of human-readable mismatches; an empty list means the
+    adapter's declared metadata is consistent with ``configs/stage2_lora.yaml``.
+    This checks *metadata only*. It cannot establish that a set of weights is
+    the adapter used for the manuscript; nothing can, because that adapter is
+    not present in the project materials.
+    """
+    adapter_dir = Path(adapter_dir)
+    problems: list[str] = []
+    config_path = adapter_dir / ADAPTER_CONFIG_FILE
+    if not adapter_dir.is_dir():
+        return [f"{adapter_dir} is not a directory"]
+    if not config_path.exists():
+        return [f"{ADAPTER_CONFIG_FILE} is missing from {adapter_dir}"]
+    try:
+        with config_path.open("r", encoding="utf-8") as handle:
+            meta = json.load(handle)
+    except json.JSONDecodeError as exc:
+        return [f"{ADAPTER_CONFIG_FILE} is not valid JSON: {exc}"]
+
+    if not any((adapter_dir / name).exists() for name in ADAPTER_WEIGHT_FILES):
+        problems.append(
+            f"no adapter weight file found; expected one of {ADAPTER_WEIGHT_FILES}"
+        )
+
+    def _expect(key: str, expected: Any) -> None:
+        actual = meta.get(key)
+        if isinstance(expected, (list, tuple)):
+            if sorted(map(str, actual or [])) != sorted(map(str, expected)):
+                problems.append(
+                    f"{key}: adapter declares {actual!r}, config requires {list(expected)!r}"
+                )
+        elif actual != expected:
+            problems.append(f"{key}: adapter declares {actual!r}, config requires {expected!r}")
+
+    _expect("peft_type", "LORA")
+    _expect("r", config.lora.rank)
+    _expect("lora_alpha", config.lora.alpha)
+    _expect("lora_dropout", config.lora.dropout)
+    _expect("target_modules", config.lora.target_modules)
+    _expect("bias", config.lora.bias)
+    declared_base = meta.get("base_model_name_or_path")
+    if declared_base != config.base_model:
+        problems.append(
+            f"base_model_name_or_path: adapter declares {declared_base!r}, "
+            f"config requires {config.base_model!r}"
+        )
+    if config.base_model_revision and meta.get("revision") not in (None, config.base_model_revision):
+        problems.append(
+            f"revision: adapter declares {meta.get('revision')!r}, "
+            f"config requires {config.base_model_revision!r}"
+        )
+    return problems
